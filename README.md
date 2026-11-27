@@ -85,5 +85,20 @@ Follow these steps to deploy your own free copy in under 5 minutes:
 
 ---
 
+## Custom Software & Web Development
+
+Need a custom business automation tool, POS system, Google Apps Script solution, or a modern website tailored to your workflow? I build custom web applications, WordPress and WooCommerce solutions, and internal business software.
+
+* **Website & Portfolio:** [naimreza.com](https://naimreza.com)
+* **Services Offered:**
+  * Custom Google Apps Script & Google Sheets Business Software (POS, Inventory, Accounting)
+  * WordPress, Elementor & WooCommerce Website Development
+  * Custom Web Applications & Workflow Automation
+  * Website Speed Optimization, Security & VPS Server Setup
+
+Feel free to visit **[naimreza.com](https://naimreza.com)** to explore my work or get in touch for your next project.
+
+---
+
 ## License
 This project is open-source and free to use for personal and commercial pharmacy operations.
