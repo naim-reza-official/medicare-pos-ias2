@@ -1,0 +1,3401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediCare POS & Ledger</title>
+<style>
+  :root {
+    --primary: #1B2B45;
+    --accent: #0C3FD5;
+    --accent-hover: #092FA3;
+    --bg-body: #F4F7FC;
+    --bg-card: #FFFFFF;
+    --text-main: #1E293B;
+    --text-muted: #616C7B;
+    --border: #E2E8F0;
+    --success: #10B981;
+    --success-bg: #ECFDF5;
+    --warning: #F59E0B;
+    --warning-bg: #FFFBEB;
+    --danger: #EF4444;
+    --danger-bg: #FEF2F2;
+    --sidebar-w: 245px;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg-body);
+    color: var(--text-main);
+    overflow-x: hidden;
+  }
+
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    max-width: var(--sidebar-w);
+    background: var(--primary);
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 40;
+    transition: transform 0.25s ease;
+  }
+
+  .sidebar-brand {
+    padding: 20px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .brand-text h1 { font-size: 16px; font-weight: 700; }
+  .brand-text p { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+
+  .sidebar-section-label {
+    padding: 18px 18px 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.9px;
+    color: #94A3B8;
+    text-transform: uppercase;
+    text-align: left;
+  }
+
+  .nav-list {
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .nav-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 11px;
+    padding: 11px 13px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #CBD5E1;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .nav-btn:hover { background: rgba(255, 255, 255, 0.08); color: #FFFFFF; }
+  .nav-btn.active {
+    background: var(--accent);
+    color: #FFFFFF;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(12, 63, 213, 0.35);
+  }
+
+  .nav-btn svg { width: 17px; height: 17px; flex-shrink: 0; pointer-events: none; }
+  .nav-label { flex: 1; text-align: left; line-height: 1.25; pointer-events: none; }
+  .nav-badge {
+    background: var(--danger);
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    min-width: 22px;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .sidebar-footer {
+    margin: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 11px;
+    color: #94A3B8;
+    line-height: 1.45;
+  }
+
+  .sidebar-footer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    color: #E2E8F0;
+    font-weight: 600;
+  }
+
+  .fifo-pill {
+    font-size: 9.5px;
+    font-weight: 700;
+    background: rgba(16, 185, 129, 0.2);
+    color: #34D399;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .main-wrapper {
+    margin-left: var(--sidebar-w);
+    width: calc(100% - var(--sidebar-w));
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .mobile-topbar {
+    display: none;
+    background: var(--primary);
+    color: #FFFFFF;
+    padding: 12px 16px;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .menu-toggle {
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: #FFFFFF;
+    padding: 7px 11px;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  .sync-bar {
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .sync-status { display: flex; align-items: center; gap: 7px; font-weight: 600; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+  .sync-dot.syncing { background: var(--warning); animation: pulse 1s infinite; }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    padding: 16px 22px 6px;
+  }
+
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 4px solid var(--accent);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .kpi-card.comm { border-left-color: var(--warning); }
+  .kpi-card.net { border-left-color: var(--success); }
+  .kpi-card.loss { border-left-color: var(--danger); cursor: pointer; }
+
+  .kpi-title { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .kpi-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+  .kpi-value { font-size: 20px; font-weight: 800; color: var(--primary); margin-top: 4px; }
+  .kpi-card.loss .kpi-value { color: var(--danger); }
+
+  .kpi-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .view-container { padding: 16px 22px 32px; width: 100%; min-width: 0; flex: 1; }
+  .view-pane { display: none; width: 100%; min-width: 0; }
+  .view-pane.active { display: block; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 18px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .card-title { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .card-subtitle { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+
+  .pos-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(350px, 1.1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .pos-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 185px;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .input-field, .select-field {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 13.5px;
+    color: var(--text-main);
+    background: #FFFFFF;
+    outline: none;
+  }
+
+  .input-field:focus, .select-field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(12, 63, 213, 0.1);
+  }
+
+  .input-field[readonly] { background: #F8FAFC; color: var(--text-muted); font-weight: 600; }
+
+  .input-group-unit {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .input-group-unit .input-field {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .input-group-unit .select-field {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: none;
+    width: 92px;
+    flex-shrink: 0;
+    background: #F8FAFC;
+    font-weight: 600;
+    padding: 9px 8px;
+  }
+
+  .med-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 12px;
+    max-height: calc(100vh - 255px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .med-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    background: #FFFFFF;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .med-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .med-card.expired-card { border-color: #FCA5A5; background: #FFFBFB; }
+
+  .med-thumb-wrap {
+    position: relative;
+    width: 100%;
+    height: 86px;
+    border-radius: 7px;
+    overflow: hidden;
+    background: #E0E7FF;
+    margin-bottom: 8px;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .med-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .med-thumb-placeholder {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    text-align: center;
+    padding: 6px;
+  }
+
+  .stock-pill {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(15, 23, 42, 0.82);
+    color: #FFFFFF;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 5px;
+  }
+
+  .stock-pill.low { background: #D97706; }
+  .stock-pill.out { background: var(--danger); }
+
+  .pack-pill {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--primary);
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .status-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    margin-right: 4px;
+    text-transform: uppercase;
+  }
+
+  .status-tag.warn { background: var(--warning-bg); color: #B45309; }
+  .status-tag.exp { background: var(--danger-bg); color: var(--danger); }
+
+  .med-title { font-size: 13.5px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+
+  .generic-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    background: #EFF6FF;
+    padding: 2px 7px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    width: fit-content;
+  }
+
+  .med-card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+    pointer-events: none;
+  }
+
+  .med-price { font-size: 13.5px; font-weight: 800; color: var(--primary); }
+  .add-hint { font-size: 11.5px; font-weight: 600; color: var(--accent); }
+
+  .voucher-card { position: sticky; top: 16px; }
+
+  .edit-banner {
+    background: var(--warning-bg);
+    border: 1px solid #FDE68A;
+    color: #92400E;
+    padding: 8px 11px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .expired-alert-box {
+    background: var(--danger-bg);
+    border: 1px solid #FECACA;
+    color: #B91C1C;
+    padding: 9px 11px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  .cart-list {
+    min-height: 135px;
+    max-height: 255px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 10px 0;
+    padding: 6px 0;
+  }
+
+  .cart-empty { text-align: center; color: var(--text-muted); font-size: 12.5px; padding: 42px 10px; }
+
+  .cart-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 4px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .cart-row-name { font-size: 13px; font-weight: 700; color: var(--text-main); }
+  .cart-row-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .cart-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .unit-mini-select {
+    padding: 3px 5px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid #CBD5E1;
+    border-radius: 5px;
+    background: #F8FAFC;
+    color: var(--primary);
+  }
+
+  .split-btn {
+    padding: 3px 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    border: 1px solid #CBD5E1;
+    border-radius: 5px;
+    background: #EFF6FF;
+    color: var(--accent);
+    cursor: pointer;
+  }
+
+  .qty-box { display: flex; align-items: center; gap: 4px; }
+  .qty-btn {
+    width: 23px;
+    height: 23px;
+    border: 1px solid #CBD5E1;
+    background: #F8FAFC;
+    border-radius: 5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .customer-box {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+
+  .customer-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .customer-inputs input {
+    padding: 7px 9px;
+    font-size: 12.5px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    width: 100%;
+    background: #FFFFFF;
+  }
+
+  .customer-status { font-size: 11px; color: var(--success); font-weight: 600; margin-top: 4px; display: none; }
+
+  .summary-line { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 7px; }
+
+  .profit-pill-row {
+    background: var(--success-bg);
+    color: #065F46;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+  }
+
+  .grand-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--primary);
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+
+  .cash-box {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 10px;
+    margin-bottom: 12px;
+  }
+
+  .cash-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .cash-row:last-child {
+    margin-bottom: 0;
+    padding-top: 6px;
+    border-top: 1px dashed #CBD5E1;
+  }
+
+  .change-val {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--success);
+  }
+
+  .change-val.due {
+    color: var(--danger);
+  }
+
+  .btn {
+    padding: 9px 15px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #FFFFFF; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-secondary { background: #F1F5F9; color: var(--text-main); border: 1px solid #CBD5E1; }
+  .btn-danger { background: var(--danger); color: #FFFFFF; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+  .btn-block { width: 100%; padding: 11px; }
+
+  .form-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .form-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+
+  .form-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .combo-wrap { position: relative; }
+  .combo-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+    margin-top: 3px;
+  }
+
+  .combo-item { padding: 8px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #F1F5F9; }
+  .combo-item:hover { background: #EFF6FF; color: var(--accent); }
+
+  .calc-strip {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--warning);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .calc-strip span { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; display: block; }
+  .calc-strip strong { font-size: 15px; color: var(--primary); margin-top: 2px; display: block; }
+
+  .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 9px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+  table.data-table th {
+    background: #F8FAFC;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.data-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .badge-green { background: var(--success-bg); color: #065F46; }
+  .badge-amber { background: var(--warning-bg); color: #B45309; }
+  .badge-red { background: var(--danger-bg); color: #B91C1C; }
+  .badge-blue { background: #EFF6FF; color: var(--accent); }
+  .badge-gray { background: #F1F5F9; color: #475569; }
+
+  .pagination-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .page-btns { display: flex; gap: 5px; }
+  .page-btn { padding: 5px 10px; border: 1px solid #CBD5E1; background: #FFFFFF; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .page-btn.active { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+  .page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .dots-btn {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .floating-menu {
+    position: fixed;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.16);
+    min-width: 165px;
+    z-index: 9999;
+    display: none;
+    overflow: hidden;
+  }
+
+  .floating-menu button {
+    width: 100%;
+    padding: 9px 14px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+    display: block;
+  }
+
+  .floating-menu button:hover { background: #F1F5F9; }
+  .floating-menu button.danger-item { color: var(--danger); }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 1000;
+  }
+
+  .modal-backdrop.open { display: flex; }
+  .modal-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    padding: 22px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  .thermal-preview-box {
+    width: 80mm;
+    max-width: 100%;
+    margin: 0 auto 16px;
+    padding: 12px 10px;
+    border: 1px dashed #94A3B8;
+    background: #FFFFFF;
+    color: #000000;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .thermal-header { text-align: center; border-bottom: 1px dashed #000000; padding-bottom: 8px; margin-bottom: 8px; }
+  .thermal-header h3 { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
+  .thermal-meta { font-size: 11px; border-bottom: 1px dashed #000000; padding-bottom: 6px; margin-bottom: 6px; }
+  .thermal-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 8px; }
+  .thermal-table th { border-bottom: 1px solid #000000; padding: 3px 0; text-align: left; }
+  .thermal-table td { padding: 4px 0; vertical-align: top; }
+  .thermal-totals { border-top: 1px dashed #000000; padding-top: 6px; font-size: 12px; }
+  .thermal-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .thermal-grand { font-weight: 800; font-size: 14px; border-top: 1px solid #000000; border-bottom: 1px dashed #000000; padding: 4px 0; margin: 4px 0; }
+  .thermal-footer { text-align: center; font-size: 10.5px; border-top: 1px dashed #000000; margin-top: 8px; padding-top: 6px; }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: #FFFFFF;
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 2000;
+    display: none;
+  }
+
+  @media (max-width: 960px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main-wrapper { margin-left: 0; width: 100%; }
+    .mobile-topbar { display: flex; }
+    .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pos-layout { grid-template-columns: 1fr; }
+    .form-grid-4, .form-grid-3, .calc-strip { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    @page { size: 80mm auto; margin: 0; }
+    body * { visibility: hidden; }
+    #receiptModal, #receiptModal * { visibility: visible; }
+    #receiptModal {
+      position: fixed;
+      inset: 0;
+      background: #FFFFFF;
+      padding: 0;
+      display: block !important;
+    }
+    #receiptModal .modal-card {
+      box-shadow: none;
+      max-width: 80mm;
+      width: 80mm;
+      padding: 2mm;
+      margin: 0;
+    }
+    .thermal-preview-box {
+      border: none;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }
+    .no-print { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">+</div>
+      <div class="brand-text">
+        <h1>MediCare POS</h1>
+        <p>IAS 2 FIFO & Ledger Suite</p>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Pharmacy Operations</div>
+    <nav class="nav-list" id="sidebarNav">
+      <button type="button" class="nav-btn active" data-view="posView">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="nav-label">Sale POS</span>
+      </button>
+
+      <button type="button" class="nav-btn" data-view="salesView">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span class="nav-label">Sales</span>
+      </button>
+
+      <button type="button" class="nav-btn" data-view="purchaseView">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <span class="nav-label">Stock Purchase</span>
+      </button>
+
+      <button type="button" class="nav-btn" data-view="priceView">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <span class="nav-label">Selling Price Manager</span>
+      </button>
+
+      <button type="button" class="nav-btn" data-view="expiryView">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="nav-label">Expiry & Batch Tracker</span>
+        <span class="nav-badge" id="expiryNavBadge">0</span>
+      </button>
+
+      <button type="button" class="nav-btn" data-view="catalogView">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="nav-label">Company & Medicine</span>
+      </button>
+
+      <button type="button" class="nav-btn" data-view="ledgerView">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="nav-label">Ledger & Export</span>
+      </button>
+
+      <button type="button" class="nav-btn" data-view="settingsView">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-label">Shop Settings</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-head">
+        <span>Accounting Basis</span>
+        <span class="fifo-pill">IAS 2 FIFO</span>
+      </div>
+      Base inventory is tracked in Pcs/Bottles with automatic Strip & Box conversion.
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <div class="mobile-topbar">
+      <strong>MediCare POS & Ledger</strong>
+      <button type="button" class="menu-toggle" id="mobileMenuBtn">Menu</button>
+    </div>
+
+    <div class="sync-bar">
+      <div class="sync-status">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncText">Synced with Google Sheets</span>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" id="forceSyncBtn">Force Sync Now</button>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-title">Retail Markup Profit</div>
+          <div class="kpi-value" id="kpiRetailMarkup">0.00 TK</div>
+          <div class="kpi-sub">Sell Price minus Gross Cost</div>
+        </div>
+        <div class="kpi-icon" style="background:#EFF6FF; color:#0C3FD5;">+</div>
+      </div>
+
+      <div class="kpi-card comm">
+        <div>
+          <div class="kpi-title">Realized Commission (IAS 2)</div>
+          <div class="kpi-value" id="kpiRealizedComm">0.00 TK</div>
+          <div class="kpi-sub" id="kpiUnearnedComm">Unearned in Stock: 0.00 TK</div>
+        </div>
+        <div class="kpi-icon" style="background:#FFFBEB; color:#D97706;">%</div>
+      </div>
+
+      <div class="kpi-card net">
+        <div>
+          <div class="kpi-title">Net Realized Profit</div>
+          <div class="kpi-value" id="kpiNetProfit">0.00 TK</div>
+          <div class="kpi-sub">Gross Profit minus Write-offs</div>
+        </div>
+        <div class="kpi-icon" style="background:#ECFDF5; color:#059669;">=</div>
+      </div>
+
+      <div class="kpi-card loss" id="kpiLossCard">
+        <div>
+          <div class="kpi-title">Inventory Write-Off Loss</div>
+          <div class="kpi-value" id="kpiWriteOffLoss">0.00 TK</div>
+          <div class="kpi-sub">Destroyed Stock (Net Cost)</div>
+        </div>
+        <div class="kpi-icon" style="background:#FEF2F2; color:#DC2626;">!</div>
+      </div>
+    </div>
+
+    <div class="view-container">
+      <!-- VIEW 1: SALE POS -->
+      <div class="view-pane active" id="posView">
+        <div class="pos-layout">
+          <div class="card">
+            <div class="pos-filters">
+              <input type="text" id="posSearch" class="input-field" placeholder="Search medicine by brand or generic name...">
+              <select id="posGenericFilter" class="select-field">
+                <option value="">All Generics</option>
+              </select>
+            </div>
+            <div class="med-grid" id="posMedGrid"></div>
+          </div>
+
+          <div class="card voucher-card">
+            <div class="card-header" style="margin-bottom:8px;">
+              <div>
+                <div class="card-title">Current Invoice / Voucher</div>
+                <div class="card-subtitle" id="cartUnitCount">0 base pcs/bottles selected</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="clearCartBtn">Clear All</button>
+            </div>
+
+            <div class="edit-banner" id="editSaleBanner" style="display:none;">
+              <span>Editing Invoice: <strong id="editSaleInvLabel"></strong></span>
+              <button type="button" class="btn btn-secondary btn-sm" id="cancelEditSaleBtn">Cancel</button>
+            </div>
+
+            <div class="expired-alert-box" id="cartExpiredAlert" style="display:none;"></div>
+
+            <div class="cart-list" id="cartList">
+              <div class="cart-empty">Voucher is empty. Click any medicine card on the left to add.</div>
+            </div>
+
+            <div class="customer-box">
+              <div class="customer-inputs">
+                <input type="text" id="custPhoneInput" list="customerPhoneList" placeholder="Phone (e.g. 017...)">
+                <input type="text" id="custNameInput" placeholder="Customer Name (Optional)">
+                <datalist id="customerPhoneList"></datalist>
+              </div>
+              <div class="customer-status" id="returningCustBadge">Returning customer matched</div>
+            </div>
+
+            <div class="summary-line">
+              <span>Subtotal</span>
+              <strong id="cartSubtotal">0.00 TK</strong>
+            </div>
+
+            <div class="summary-line">
+              <span>Discount (TK)</span>
+              <input type="number" id="cartDiscount" class="input-field" style="width:95px; padding:4px 8px; text-align:right;" value="0" min="0">
+            </div>
+
+            <div class="profit-pill-row">
+              <span>Estimated IAS 2 Gross Profit:</span>
+              <span id="cartEstProfit">0.00 TK</span>
+            </div>
+
+            <div class="grand-line">
+              <span>Grand Total</span>
+              <span id="cartGrandTotal">0.00 TK</span>
+            </div>
+
+            <div class="cash-box">
+              <div class="cash-row">
+                <span style="font-weight:600; color:var(--text-main);">Cash Received (TK)</span>
+                <input type="number" id="cartCashReceived" class="input-field" style="width:110px; padding:5px 8px; text-align:right; font-weight:700;" min="0" step="0.01" placeholder="0.00">
+              </div>
+              <div class="cash-row">
+                <span id="cartChangeLabel" style="font-weight:700; color:var(--text-muted);">Return / Change</span>
+                <span id="cartChangeAmount" class="change-val">0.00 TK</span>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" id="completeSaleBtn">Complete Sale & Print 80mm</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: SALES HISTORY -->
+      <div class="view-pane" id="salesView">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Sales Invoices & Customer Returns</div>
+              <div class="card-subtitle">Filter by invoice number or customer phone, view 80mm receipt, edit, or process full return</div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <input type="text" id="salesInvFilter" class="input-field" style="width:175px;" placeholder="Invoice No...">
+              <input type="text" id="salesPhoneFilter" class="input-field" style="width:175px;" placeholder="Customer Phone...">
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Date & Time</th>
+                  <th>Customer</th>
+                  <th>Items Sold</th>
+                  <th>Grand Total</th>
+                  <th>IAS 2 Gross Profit</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="salesTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="salesPagination"></div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: STOCK PURCHASE -->
+      <div class="view-pane" id="purchaseView">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title" id="purchaseFormTitle">Record Wholesale Stock Purchase</div>
+              <div class="card-subtitle">Purchase by Box, Strip, or Pcs/Bottle — automatically converted to base Pcs for FIFO tracking</div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="cancelPurchaseEditBtn" style="display:none;">Cancel Edit</button>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="combo-wrap">
+              <label class="form-label">Supplier / Company Name *</label>
+              <input type="text" id="purCompany" class="input-field" placeholder="Search or select company...">
+              <div class="combo-list" id="companyCombo"></div>
+            </div>
+
+            <div class="combo-wrap">
+              <label class="form-label">Medicine Brand Name *</label>
+              <input type="text" id="purMedName" class="input-field" placeholder="Search medicine...">
+              <div class="combo-list" id="medCombo"></div>
+            </div>
+
+            <div>
+              <label class="form-label">Generic & Pack Info (Auto)</label>
+              <input type="text" id="purGeneric" class="input-field" readonly placeholder="Auto-filled from catalog">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div>
+              <label class="form-label">Purchase Unit *</label>
+              <select id="purUnitType" class="select-field">
+                <option value="pcs">Pcs / Bottle (Single Unit)</option>
+                <option value="strip">Strip (Pata)</option>
+                <option value="box">Box</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-label" id="purQtyLabel">Quantity (Pcs) *</label>
+              <input type="number" id="purQty" class="input-field" min="1" placeholder="e.g., 10">
+            </div>
+
+            <div>
+              <label class="form-label" id="purGrossLabel">Gross Price per Pcs (TK) *</label>
+              <input type="number" id="purGrossPrice" class="input-field" min="0" step="0.01" placeholder="e.g., 5.00">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div>
+              <label class="form-label">Company Commission (%)</label>
+              <input type="number" id="purCommRate" class="input-field" min="0" max="100" step="0.1" value="0">
+            </div>
+
+            <div>
+              <label class="form-label">Expiry Date *</label>
+              <input type="date" id="purExpiry" class="input-field">
+            </div>
+
+            <div>
+              <label class="form-label">Batch No & Alert Days</label>
+              <div style="display:grid; grid-template-columns:1.3fr 0.7fr; gap:8px;">
+                <input type="text" id="purBatchNo" class="input-field" readonly>
+                <input type="number" id="purAlertDays" class="input-field" min="1" value="15" title="Alert Days Prior">
+              </div>
+            </div>
+          </div>
+
+          <div class="calc-strip">
+            <div>
+              <span>Total Stock Added</span>
+              <strong id="prevTotalBaseQty">0 Pcs</strong>
+            </div>
+            <div>
+              <span>Net Cost per Base Pc (IAS 2)</span>
+              <strong id="prevNetUnit">0.00 TK</strong>
+            </div>
+            <div>
+              <span>Supplier Discount</span>
+              <strong id="prevTradeDisc" style="color:var(--warning);">0.00 TK</strong>
+            </div>
+            <div>
+              <span>Net Payable to Supplier</span>
+              <strong id="prevNetPayable">0.00 TK</strong>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary" id="savePurchaseBtn">Save Stock Purchase Batch</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Wholesale Purchase Batches</div>
+              <div class="card-subtitle">All quantities and unit costs are stored in base Pcs/Bottles</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Batch & Expiry</th>
+                  <th>Company</th>
+                  <th>Medicine</th>
+                  <th>Rem / Init (Pcs)</th>
+                  <th>Gross / Net Pc Cost</th>
+                  <th>Comm %</th>
+                  <th>Net Paid</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="purchaseTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="purchasePagination"></div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: SELLING PRICE MANAGER -->
+      <div class="view-pane" id="priceView">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Selling Price Manager</div>
+              <div class="card-subtitle">Set retail price per Base Unit (1 Pc or 1 Bottle) — Strip & Box prices calculate automatically</div>
+            </div>
+            <input type="text" id="priceSearch" class="input-field" style="width:240px;" placeholder="Filter medicine...">
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Medicine & Generic</th>
+                  <th>Pack Configuration</th>
+                  <th>Active Stock</th>
+                  <th>Net Cost / Pc</th>
+                  <th>Sell Price / Pc (TK)</th>
+                  <th>Strip / Box Price</th>
+                  <th>Update</th>
+                </tr>
+              </thead>
+              <tbody id="priceTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="pricePagination"></div>
+        </div>
+      </div>
+
+      <!-- VIEW 5: EXPIRY & BATCH TRACKER -->
+      <div class="view-pane" id="expiryView">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Expiry & Batch Tracker</div>
+              <div class="card-subtitle">Return batches to supplier (0.00 TK loss) or destroy (IAS 2 inventory write-off loss)</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Batch No</th>
+                  <th>Medicine & Company</th>
+                  <th>Expiry Date</th>
+                  <th>Alert Rule</th>
+                  <th>Remaining Stock</th>
+                  <th>Net Carrying Value</th>
+                  <th>Status</th>
+                  <th>Disposition</th>
+                </tr>
+              </thead>
+              <tbody id="expiryTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="expiryPagination"></div>
+        </div>
+      </div>
+
+      <!-- VIEW 6: COMPANY & MEDICINE CATALOG -->
+      <div class="view-pane" id="catalogView">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title" id="catFormTitle">Add Medicine to Master Catalog</div>
+              <div class="card-subtitle">Configure pack conversion and Minimum Stock threshold for automated low-inventory email alerts.</div>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div>
+              <label class="form-label">Company / Supplier Name *</label>
+              <input type="text" id="catCompany" class="input-field" placeholder="e.g., Square Pharmaceuticals">
+            </div>
+            <div>
+              <label class="form-label">Medicine Brand Name *</label>
+              <input type="text" id="catName" class="input-field" placeholder="e.g., Napa Extend / Napa Syrup">
+            </div>
+            <div>
+              <label class="form-label">Generic Name *</label>
+              <input type="text" id="catGeneric" class="input-field" placeholder="e.g., Paracetamol">
+            </div>
+          </div>
+
+          <div class="form-grid-4">
+            <div>
+              <label class="form-label">Pcs per Strip (Pata) *</label>
+              <input type="number" id="catPcsPerStrip" class="input-field" min="1" value="10" placeholder="10 for tablet, 1 for bottle">
+            </div>
+            <div>
+              <label class="form-label">Strips per Box *</label>
+              <input type="number" id="catStripsPerBox" class="input-field" min="1" value="10" placeholder="10 for box, 1 for bottle">
+            </div>
+            <div>
+              <label class="form-label">Sell Price / Pc or Btl (TK) *</label>
+              <input type="number" id="catSellPrice" class="input-field" step="0.01" min="0" placeholder="e.g., 2.00">
+            </div>
+            <div>
+              <label class="form-label">Minimum Stock Alert</label>
+              <div class="input-group-unit">
+                <input type="number" id="catMinStock" class="input-field" min="0" value="20" placeholder="e.g., 20">
+                <select id="catMinStockUnit" class="select-field" title="Select Minimum Stock Unit">
+                  <option value="pcs">Pcs</option>
+                  <option value="strip">Strip</option>
+                  <option value="box">Box</option>
+                </select>
+              </div>
+              <small id="catMinStockPreview" style="display:block; margin-top:4px; font-size:11px; color:var(--text-muted); font-weight:600;">= 20 Base Pcs</small>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div>
+              <label class="form-label">Product Image URL (Optional)</label>
+              <input type="text" id="catImgUrl" class="input-field" placeholder="https://...">
+            </div>
+            <div>
+              <label class="form-label">Or Upload Compressed Image</label>
+              <input type="file" id="catImgFile" class="input-field" accept="image/*">
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn btn-primary" id="saveCatalogBtn">Save Medicine</button>
+            <button type="button" class="btn btn-secondary" id="cancelCatEditBtn" style="display:none;">Cancel</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Registered Medicines</div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>Brand Name</th>
+                  <th>Generic & Company</th>
+                  <th>Pack Size</th>
+                  <th>Min Stock Alert</th>
+                  <th>Pc / Strip / Box Price</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="catalogTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="catalogPagination"></div>
+        </div>
+      </div>
+
+      <!-- VIEW 7: LEDGER & EXPORT -->
+      <div class="view-pane" id="ledgerView">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Accounting Ledger & CSV Export</div>
+              <div class="card-subtitle">Filter transactions by date range and export audit-ready CSV statements</div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <input type="date" id="ledFromDate" class="input-field" style="width:145px;">
+              <input type="date" id="ledToDate" class="input-field" style="width:145px;">
+              <select id="ledTypeFilter" class="select-field" style="width:165px;">
+                <option value="">All Entries</option>
+                <option value="Retail Sale">Retail Sale</option>
+                <option value="Sale Return">Sale Return</option>
+                <option value="Wholesale Purchase">Wholesale Purchase</option>
+                <option value="Supplier Return">Supplier Return</option>
+                <option value="Stock Destroyed">Stock Destroyed</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" id="exportCsvBtn">Export CSV</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Reference</th>
+                  <th>Party</th>
+                  <th>Description</th>
+                  <th>Cash In (Debit)</th>
+                  <th>Cash Out (Credit)</th>
+                  <th>IAS Profit Impact</th>
+                </tr>
+              </thead>
+              <tbody id="ledgerTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="ledgerPagination"></div>
+        </div>
+      </div>
+
+      <!-- VIEW 8: SHOP SETTINGS -->
+      <div class="view-pane" id="settingsView">
+        <div class="card" style="max-width:650px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Pharmacy Receipt & Alert Settings</div>
+              <div class="card-subtitle">Configure 80mm thermal receipt details and email address for low-inventory notifications</div>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div>
+              <label class="form-label">Pharmacy / Shop Name</label>
+              <input type="text" id="setShopName" class="input-field">
+            </div>
+            <div>
+              <label class="form-label">Contact Phone</label>
+              <input type="text" id="setShopPhone" class="input-field">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div>
+              <label class="form-label">Shop Address</label>
+              <input type="text" id="setShopAddress" class="input-field">
+            </div>
+            <div>
+              <label class="form-label">Low Stock Alert Email *</label>
+              <input type="email" id="setAlertEmail" class="input-field" placeholder="e.g., pharmacy@gmail.com">
+            </div>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label class="form-label">80mm Receipt Footer Note</label>
+            <input type="text" id="setShopFooter" class="input-field">
+          </div>
+
+          <button type="button" class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="floating-menu" id="floatingMenu"></div>
+
+<div class="modal-backdrop" id="receiptModal">
+  <div class="modal-card" style="max-width:380px;">
+    <div class="thermal-preview-box" id="thermalReceiptContent"></div>
+    <div class="no-print" style="display:flex; gap:10px; justify-content:center;">
+      <button type="button" class="btn btn-primary" id="printReceiptBtn">Print 80mm Receipt</button>
+      <button type="button" class="btn btn-secondary" data-close-modal="receiptModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="dispositionModal">
+  <div class="modal-card">
+    <h3 style="font-size:16px; color:var(--primary); margin-bottom:6px;">Batch Return / Destroy</h3>
+    <p id="dispModalDesc" style="font-size:13px; color:var(--text-muted); margin-bottom:12px; line-height:1.45;"></p>
+    <div style="margin-bottom:14px;">
+      <label class="form-label">Quantity (in Base Pcs) to Return or Destroy *</label>
+      <input type="number" id="dispQtyInput" class="input-field" min="1">
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button type="button" class="btn btn-primary" id="confirmReturnBtn">Return to Supplier (0.00 TK Loss)</button>
+      <button type="button" class="btn btn-danger" id="confirmDestroyBtn">Destroy Stock (Record IAS 2 Loss)</button>
+      <button type="button" class="btn btn-secondary" data-close-modal="dispositionModal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastBox"></div>
+
+<script>
+(function() {
+  const CACHE_KEY = "medicare_pos_ias_cache_v10";
+  const PAGE_SIZE = 15;
+
+  let appState = {
+    cacheVersion: "0",
+    catalog: [],
+    batches: [],
+    sales: [],
+    ledger: [],
+    customers: [],
+    settings: {
+      shopName: "MediCare Model Pharmacy",
+      shopPhone: "+880 1711-000000",
+      shopAddress: "Dhaka, Bangladesh",
+      shopFooter: "Thank you for your visit.",
+      alertEmail: ""
+    }
+  };
+
+  let cart = [];
+  let editInvoiceNo = null;
+  let editPurchaseBatchNo = null;
+  let editCatalogId = null;
+  let selectedMedForPurchase = null;
+  let dispositionBatchNo = null;
+  let uploadedBase64Img = "";
+
+  let salesPage = 1;
+  let purchasePage = 1;
+  let pricePage = 1;
+  let expiryPage = 1;
+  let catalogPage = 1;
+  let ledgerPage = 1;
+  let toastTimer = null;
+
+  function el(tag, props, children) {
+    const node = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function(k) {
+        if (k === "className") node.className = props[k];
+        else if (k === "textContent") node.textContent = props[k];
+        else if (k === "style") node.setAttribute("style", props[k]);
+        else if (k === "dataset") {
+          Object.keys(props[k]).forEach(function(dk) {
+            node.dataset[dk] = props[k][dk];
+          });
+        } else {
+          node.setAttribute(k, props[k]);
+        }
+      });
+    }
+    if (children) {
+      (Array.isArray(children) ? children : [children]).forEach(function(c) {
+        if (c === null || c === undefined) return;
+        node.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+      });
+    }
+    return node;
+  }
+
+  function clearNode(node) {
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
+  }
+
+  function normPhone(val) {
+    let p = String(val || "").trim().replace(/^'+/, "");
+    if (!p) return "";
+    if (/^1[3-9]\d{8}$/.test(p)) {
+      p = "0" + p;
+    }
+    return p;
+  }
+
+  function getUnitMultiplier(med, unitType) {
+    const pps = Math.max(1, Number(med.pcsPerStrip) || 1);
+    const spb = Math.max(1, Number(med.stripsPerBox) || 1);
+    if (unitType === "strip") return pps;
+    if (unitType === "box") return pps * spb;
+    return 1;
+  }
+
+  function getUnitDisplayLabel(med, unitType) {
+    const isBottle = (Number(med.pcsPerStrip) || 1) === 1 && (Number(med.stripsPerBox) || 1) === 1;
+    if (isBottle) return "Bottle";
+    if (unitType === "strip") return "Strip";
+    if (unitType === "box") return "Box";
+    return "Pcs";
+  }
+
+  function getCatalogMinStockMultiplier() {
+    const pps = Math.max(1, Number(document.getElementById("catPcsPerStrip").value) || 1);
+    const spb = Math.max(1, Number(document.getElementById("catStripsPerBox").value) || 1);
+    const unit = document.getElementById("catMinStockUnit").value;
+    if (unit === "strip") return pps;
+    if (unit === "box") return pps * spb;
+    return 1;
+  }
+
+  function updateCatalogMinStockPreview() {
+    const val = Math.max(0, Number(document.getElementById("catMinStock").value) || 0);
+    const mult = getCatalogMinStockMultiplier();
+    const basePcs = val * mult;
+    document.getElementById("catMinStockPreview").textContent = "= " + basePcs + " Base Pcs";
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    bindStaticEvents();
+    updateCatalogMinStockPreview();
+    loadFromSmartCache();
+  });
+
+  function bindStaticEvents() {
+    document.getElementById("sidebarNav").addEventListener("click", function(e) {
+      const btn = e.target.closest(".nav-btn");
+      if (btn && btn.dataset.view) {
+        switchView(btn.dataset.view, btn);
+      }
+    });
+
+    document.getElementById("mobileMenuBtn").addEventListener("click", function() {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+
+    document.getElementById("forceSyncBtn").addEventListener("click", forceRefreshFromServer);
+
+    document.getElementById("kpiLossCard").addEventListener("click", function() {
+      const btn = document.querySelector("[data-view=expiryView]");
+      switchView("expiryView", btn);
+    });
+
+    document.getElementById("posSearch").addEventListener("input", renderPosGrid);
+    document.getElementById("posGenericFilter").addEventListener("change", renderPosGrid);
+    document.getElementById("clearCartBtn").addEventListener("click", clearCart);
+    document.getElementById("cancelEditSaleBtn").addEventListener("click", cancelEditSale);
+    document.getElementById("custPhoneInput").addEventListener("input", handleCustomerPhoneInput);
+    document.getElementById("cartDiscount").addEventListener("input", renderCart);
+    document.getElementById("cartCashReceived").addEventListener("input", updateCashChangeDisplay);
+    document.getElementById("completeSaleBtn").addEventListener("click", submitSale);
+
+    document.getElementById("posMedGrid").addEventListener("click", function(e) {
+      const genBtn = e.target.closest("[data-filter-generic]");
+      if (genBtn) {
+        e.stopPropagation();
+        filterByGeneric(genBtn.dataset.filterGeneric);
+        return;
+      }
+      const card = e.target.closest("[data-add-med]");
+      if (card) {
+        addToCart(Number(card.dataset.addMed), false);
+      }
+    });
+
+    document.getElementById("cartList").addEventListener("click", function(e) {
+      const deltaBtn = e.target.closest("[data-cart-delta]");
+      if (deltaBtn) {
+        updateCartRowQty(Number(deltaBtn.dataset.rowIdx), Number(deltaBtn.dataset.cartDelta));
+        return;
+      }
+      const splitBtn = e.target.closest("[data-split-med]");
+      if (splitBtn) {
+        addToCart(Number(splitBtn.dataset.splitMed), true);
+      }
+    });
+
+    document.getElementById("cartList").addEventListener("change", function(e) {
+      const unitSel = e.target.closest("[data-cart-unit]");
+      if (unitSel) {
+        changeCartRowUnit(Number(unitSel.dataset.rowIdx), unitSel.value);
+      }
+    });
+
+    document.getElementById("salesInvFilter").addEventListener("input", function() { salesPage = 1; renderSalesTable(); });
+    document.getElementById("salesPhoneFilter").addEventListener("input", function() { salesPage = 1; renderSalesTable(); });
+    document.getElementById("salesTableBody").addEventListener("click", function(e) {
+      const btn = e.target.closest("[data-sales-menu]");
+      if (btn) openSalesMenu(e, btn.dataset.salesMenu);
+    });
+
+    const purComp = document.getElementById("purCompany");
+    const purMed = document.getElementById("purMedName");
+    purComp.addEventListener("focus", function() { openCombo("companyCombo"); });
+    purComp.addEventListener("input", function() { filterCombo("companyCombo", purComp.value); });
+    purMed.addEventListener("focus", function() { openCombo("medCombo"); });
+    purMed.addEventListener("input", function() { filterCombo("medCombo", purMed.value); });
+
+    document.getElementById("companyCombo").addEventListener("click", function(e) {
+      const item = e.target.closest("[data-select-company]");
+      if (item) selectPurchaseCompany(item.dataset.selectCompany);
+    });
+
+    document.getElementById("medCombo").addEventListener("click", function(e) {
+      const item = e.target.closest("[data-select-med]");
+      if (item) selectPurchaseMedicine(Number(item.dataset.selectMed));
+    });
+
+    document.getElementById("purUnitType").addEventListener("change", updatePurchaseUnitLabels);
+    document.getElementById("purQty").addEventListener("input", previewPurchaseCalc);
+    document.getElementById("purGrossPrice").addEventListener("input", previewPurchaseCalc);
+    document.getElementById("purCommRate").addEventListener("input", previewPurchaseCalc);
+    document.getElementById("savePurchaseBtn").addEventListener("click", submitPurchase);
+    document.getElementById("cancelPurchaseEditBtn").addEventListener("click", resetPurchaseForm);
+
+    document.getElementById("purchaseTableBody").addEventListener("click", function(e) {
+      const btn = e.target.closest("[data-batch-menu]");
+      if (btn) openBatchMenu(e, btn.dataset.batchMenu);
+    });
+
+    document.getElementById("priceSearch").addEventListener("input", function() { pricePage = 1; renderPriceTable(); });
+    document.getElementById("priceTableBody").addEventListener("click", function(e) {
+      const btn = e.target.closest("[data-update-price]");
+      if (btn) saveRowSellingPrice(Number(btn.dataset.updatePrice));
+    });
+
+    document.getElementById("expiryTableBody").addEventListener("click", function(e) {
+      const btn = e.target.closest("[data-disp-batch]");
+      if (btn) openDispositionModal(btn.dataset.dispBatch);
+    });
+
+    document.getElementById("catPcsPerStrip").addEventListener("input", updateCatalogMinStockPreview);
+    document.getElementById("catStripsPerBox").addEventListener("input", updateCatalogMinStockPreview);
+    document.getElementById("catMinStock").addEventListener("input", updateCatalogMinStockPreview);
+    document.getElementById("catMinStockUnit").addEventListener("change", updateCatalogMinStockPreview);
+
+    document.getElementById("catImgFile").addEventListener("change", handleImageFile);
+    document.getElementById("saveCatalogBtn").addEventListener("click", submitCatalogMedicine);
+    document.getElementById("cancelCatEditBtn").addEventListener("click", resetCatalogForm);
+    document.getElementById("catalogTableBody").addEventListener("click", function(e) {
+      const btn = e.target.closest("[data-edit-cat]");
+      if (btn) startEditCatalog(Number(btn.dataset.editCat));
+    });
+
+    document.getElementById("ledFromDate").addEventListener("change", function() { ledgerPage = 1; renderLedgerTable(); });
+    document.getElementById("ledToDate").addEventListener("change", function() { ledgerPage = 1; renderLedgerTable(); });
+    document.getElementById("ledTypeFilter").addEventListener("change", function() { ledgerPage = 1; renderLedgerTable(); });
+    document.getElementById("exportCsvBtn").addEventListener("click", exportLedgerCSV);
+    document.getElementById("saveSettingsBtn").addEventListener("click", submitSettings);
+
+    document.getElementById("printReceiptBtn").addEventListener("click", function() {
+      window.print();
+    });
+
+    document.getElementById("confirmReturnBtn").addEventListener("click", function() { confirmDisposition("return"); });
+    document.getElementById("confirmDestroyBtn").addEventListener("click", function() { confirmDisposition("destroy"); });
+
+    document.querySelectorAll("[data-close-modal]").forEach(function(btn) {
+      btn.addEventListener("click", function() { closeModal(btn.dataset.closeModal); });
+    });
+
+    document.getElementById("floatingMenu").addEventListener("click", function(e) {
+      const btn = e.target.closest("[data-menu-action]");
+      if (!btn) return;
+      const act = btn.dataset.menuAction;
+      const id = btn.dataset.targetId;
+      document.getElementById("floatingMenu").style.display = "none";
+
+      if (act === "viewInv") viewInvoiceFromList(id);
+      if (act === "editInv") startEditSale(id);
+      if (act === "returnInv") triggerFullSaleReturn(id);
+      if (act === "editBatch") startEditBatch(id);
+      if (act === "dispBatch") openDispositionModal(id);
+      if (act === "delBatch") triggerDeleteBatch(id);
+    });
+
+    document.addEventListener("click", function(e) {
+      if (!e.target.closest(".dots-btn") && !e.target.closest(".floating-menu")) {
+        document.getElementById("floatingMenu").style.display = "none";
+      }
+      if (!e.target.closest(".combo-wrap")) {
+        document.querySelectorAll(".combo-list").forEach(function(box) { box.style.display = "none"; });
+      }
+    });
+  }
+
+  function setSyncIndicator(isSyncing, label) {
+    const dot = document.getElementById("syncDot");
+    const txt = document.getElementById("syncText");
+    dot.className = isSyncing ? "sync-dot syncing" : "sync-dot";
+    txt.textContent = label;
+  }
+
+  function saveToLocalCache(data) {
+    try {
+      window.localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data: data }));
+    } catch (e) {}
+  }
+
+  function loadFromSmartCache() {
+    let cached = null;
+    try {
+      const raw = window.localStorage.getItem(CACHE_KEY);
+      if (raw) cached = JSON.parse(raw).data;
+    } catch (e) {}
+
+    if (cached && cached.cacheVersion) {
+      appState = cached;
+      refreshAllViews();
+      setSyncIndicator(true, "Loaded from cache. Verifying with Google Sheets...");
+
+      if (typeof google !== "undefined" && google.script) {
+        google.script.run
+          .withSuccessHandler(function(serverVersion) {
+            if (String(serverVersion) !== String(appState.cacheVersion)) {
+              forceRefreshFromServer();
+            } else {
+              setSyncIndicator(false, "Synced & Verified (Up to date)");
+            }
+          })
+          .withFailureHandler(function() { setSyncIndicator(false, "Offline / Cache Mode"); })
+          .getCacheVersion();
+      }
+    } else {
+      forceRefreshFromServer();
+    }
+  }
+
+  function forceRefreshFromServer() {
+    setSyncIndicator(true, "Syncing latest data from Google Sheets...");
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(freshData) {
+          appState = freshData;
+          saveToLocalCache(freshData);
+          refreshAllViews();
+          setSyncIndicator(false, "Synced with Google Sheets");
+        })
+        .withFailureHandler(function(err) {
+          setSyncIndicator(false, "Sync failed: " + err.message);
+          showToast("Error syncing data: " + err.message);
+        })
+        .getAllAppData();
+    } else {
+      setSyncIndicator(false, "Local Preview Mode");
+      refreshAllViews();
+    }
+  }
+
+  function applyServerResponse(freshData, message) {
+    appState = freshData;
+    saveToLocalCache(freshData);
+    refreshAllViews();
+    setSyncIndicator(false, "Synced with Google Sheets");
+    if (message) showToast(message);
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toastBox");
+    t.textContent = msg;
+    t.style.display = "block";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { t.style.display = "none"; }, 3200);
+  }
+
+  function switchView(viewId, btn) {
+    document.querySelectorAll(".view-pane").forEach(function(p) { p.classList.remove("active"); });
+    const target = document.getElementById(viewId);
+    if (target) target.classList.add("active");
+
+    document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+    if (btn) btn.classList.add("active");
+    document.getElementById("sidebar").classList.remove("open");
+  }
+
+  function refreshAllViews() {
+    updateKPIStrip();
+    populateFiltersAndDatalists();
+    renderPosGrid();
+    renderCart();
+    renderSalesTable();
+    renderPurchaseTable();
+    renderPriceTable();
+    renderExpiryTable();
+    renderCatalogTable();
+    renderLedgerTable();
+    loadSettingsForm();
+    if (!editPurchaseBatchNo) {
+      document.getElementById("purBatchNo").value = generateNextBatchNo();
+    }
+  }
+
+  function updateKPIStrip() {
+    let totalRetailMarkup = 0;
+    let totalRealizedComm = 0;
+    let totalGrossProfit = 0;
+
+    appState.sales.forEach(function(s) {
+      if (s.status !== "Returned") {
+        totalRetailMarkup += Number(s.retailMarkup) || 0;
+        totalRealizedComm += Number(s.realizedComm) || 0;
+        totalGrossProfit += Number(s.grossProfit) || 0;
+      }
+    });
+
+    let unearnedCommInStock = 0;
+    appState.batches.forEach(function(b) {
+      if (b.remainingQty > 0) {
+        unearnedCommInStock += b.remainingQty * (b.grossUnitCost - b.netUnitCost);
+      }
+    });
+
+    let writeOffLoss = 0;
+    appState.ledger.forEach(function(l) {
+      if (l.type === "Stock Destroyed") {
+        writeOffLoss += Math.abs(Number(l.profitImpact) || 0);
+      }
+    });
+
+    const netRealizedProfit = totalGrossProfit - writeOffLoss;
+
+    document.getElementById("kpiRetailMarkup").textContent = totalRetailMarkup.toFixed(2) + " TK";
+    document.getElementById("kpiRealizedComm").textContent = totalRealizedComm.toFixed(2) + " TK";
+    document.getElementById("kpiUnearnedComm").textContent = "Unearned in Stock: " + unearnedCommInStock.toFixed(2) + " TK";
+    document.getElementById("kpiNetProfit").textContent = netRealizedProfit.toFixed(2) + " TK";
+    document.getElementById("kpiWriteOffLoss").textContent = writeOffLoss.toFixed(2) + " TK";
+  }
+
+  function getTodayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function daysBetween(dateStr1, dateStr2) {
+    const d1 = new Date(dateStr1 + "T00:00:00");
+    const d2 = new Date(dateStr2 + "T00:00:00");
+    return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+  }
+
+  function getBatchExpiryStatus(batch) {
+    const today = getTodayStr();
+    const diff = daysBetween(today, batch.expiry);
+    if (diff < 0) return { code: "expired", label: "Expired", days: diff };
+    if (diff <= (batch.alertDays || 15)) return { code: "warning", label: "Expiring in " + diff + "d", days: diff };
+    return { code: "ok", label: "Active", days: diff };
+  }
+
+  function populateFiltersAndDatalists() {
+    const generics = Array.from(new Set(appState.catalog.map(function(c) { return c.generic; }).filter(Boolean))).sort();
+    const sel = document.getElementById("posGenericFilter");
+    const prevVal = sel.value;
+    clearNode(sel);
+    sel.appendChild(el("option", { value: "", textContent: "All Generics" }));
+    generics.forEach(function(g) {
+      sel.appendChild(el("option", { value: g, textContent: g }));
+    });
+    sel.value = prevVal;
+
+    const dl = document.getElementById("customerPhoneList");
+    clearNode(dl);
+    appState.customers.forEach(function(c) {
+      const p = normPhone(c.phone);
+      if (p) {
+        dl.appendChild(el("option", { value: p, textContent: c.name || "" }));
+      }
+    });
+  }
+
+  function renderPosGrid() {
+    const q = document.getElementById("posSearch").value.toLowerCase().trim();
+    const genFilter = document.getElementById("posGenericFilter").value;
+    const grid = document.getElementById("posMedGrid");
+    clearNode(grid);
+
+    const filtered = appState.catalog.filter(function(m) {
+      const matchText = m.name.toLowerCase().includes(q) || m.generic.toLowerCase().includes(q) || m.company.toLowerCase().includes(q);
+      const matchGen = !genFilter || m.generic === genFilter;
+      return matchText && matchGen;
+    });
+
+    if (filtered.length === 0) {
+      grid.appendChild(el("div", {
+        style: "grid-column:1/-1; text-align:center; padding:30px; color:var(--text-muted);",
+        textContent: "No medicines found. Add medicines in Company & Medicine tab first."
+      }));
+      return;
+    }
+
+    filtered.forEach(function(med) {
+      const medBatches = appState.batches.filter(function(b) { return b.medId === med.id && b.remainingQty > 0; });
+      const totalStock = medBatches.reduce(function(sum, b) { return sum + b.remainingQty; }, 0);
+      const minStock = Math.max(0, Number(med.minStock) || 0);
+      const isLowStock = minStock > 0 && totalStock > 0 && totalStock <= minStock;
+
+      const hasExpired = medBatches.some(function(b) { return getBatchExpiryStatus(b).code === "expired"; });
+      const hasWarning = !hasExpired && medBatches.some(function(b) { return getBatchExpiryStatus(b).code === "warning"; });
+      const pps = Math.max(1, Number(med.pcsPerStrip) || 1);
+      const spb = Math.max(1, Number(med.stripsPerBox) || 1);
+      const isBottle = pps === 1 && spb === 1;
+
+      const thumbMedia = med.img
+        ? el("img", { src: med.img, alt: med.name })
+        : el("div", { className: "med-thumb-placeholder", textContent: med.name });
+
+      const packBadgeText = isBottle
+        ? "1 Bottle"
+        : (pps + " pcs/strip | " + spb + " str/box");
+
+      const stockPillClass = "stock-pill" + (totalStock <= 0 ? " out" : (isLowStock ? " low" : ""));
+
+      const thumbWrap = el("div", { className: "med-thumb-wrap" }, [
+        thumbMedia,
+        el("span", { className: stockPillClass, textContent: "Stock: " + totalStock + (isBottle ? " btl" : " pcs") }),
+        el("span", { className: "pack-pill", textContent: packBadgeText })
+      ]);
+
+      const topChildren = [thumbWrap];
+      if (hasExpired) topChildren.push(el("span", { className: "status-tag exp", textContent: "Expired Batch" }));
+      if (hasWarning) topChildren.push(el("span", { className: "status-tag warn", textContent: "Expiring Soon" }));
+      if (isLowStock) topChildren.push(el("span", { className: "status-tag warn", textContent: "Low Stock" }));
+
+      topChildren.push(el("div", { className: "med-title", textContent: med.name }));
+      topChildren.push(el("span", {
+        className: "generic-pill",
+        dataset: { filterGeneric: med.generic },
+        textContent: med.generic
+      }));
+
+      const priceLabel = isBottle
+        ? Number(med.sellPrice).toFixed(2) + " TK/btl"
+        : Number(med.sellPrice).toFixed(2) + " TK/pc";
+
+      const foot = el("div", { className: "med-card-foot" }, [
+        el("span", { className: "med-price", textContent: priceLabel }),
+        el("span", { className: "add-hint", textContent: "+ Add" })
+      ]);
+
+      const card = el("div", {
+        className: "med-card" + (hasExpired ? " expired-card" : ""),
+        dataset: { addMed: String(med.id) }
+      }, [el("div", null, topChildren), foot]);
+
+      grid.appendChild(card);
+    });
+  }
+
+  function filterByGeneric(gen) {
+    const sel = document.getElementById("posGenericFilter");
+    sel.value = sel.value === gen ? "" : gen;
+    renderPosGrid();
+  }
+
+  function getAvailableStockForMed(medId) {
+    let stock = appState.batches
+      .filter(function(b) { return b.medId === medId && b.remainingQty > 0; })
+      .reduce(function(s, b) { return s + b.remainingQty; }, 0);
+
+    if (editInvoiceNo) {
+      const orig = appState.sales.find(function(s) { return s.invoiceNo === editInvoiceNo; });
+      if (orig) {
+        (orig.items || []).forEach(function(item) {
+          if (item.medId === medId) {
+            stock += Number(item.baseQty || item.qty) || 0;
+          }
+        });
+      }
+    }
+    return stock;
+  }
+
+  function getCartTotalBaseQtyForMed(medId) {
+    return cart.reduce(function(sum, row) {
+      return row.medId === medId ? sum + row.baseQty : sum;
+    }, 0);
+  }
+
+  function addToCart(medId, forceNewLine) {
+    const med = appState.catalog.find(function(m) { return m.id === medId; });
+    if (!med) return;
+    const avail = getAvailableStockForMed(medId);
+    const alreadyInCart = getCartTotalBaseQtyForMed(medId);
+
+    if (avail - alreadyInCart <= 0) {
+      showToast("No more stock available for " + med.name);
+      return;
+    }
+
+    if (!forceNewLine) {
+      const existing = cart.find(function(c) { return c.medId === medId && c.unitType === "pcs"; });
+      if (existing) {
+        existing.displayQty += 1;
+        existing.baseQty = existing.displayQty * existing.multiplier;
+        renderCart();
+        return;
+      }
+    }
+
+    cart.push({
+      medId: med.id,
+      name: med.name,
+      generic: med.generic,
+      baseSellPrice: med.sellPrice,
+      unitType: "pcs",
+      unitLabel: getUnitDisplayLabel(med, "pcs"),
+      multiplier: 1,
+      displayQty: 1,
+      unitSellPrice: med.sellPrice,
+      baseQty: 1
+    });
+    renderCart();
+  }
+
+  function changeCartRowUnit(rowIdx, newUnitType) {
+    const row = cart[rowIdx];
+    if (!row) return;
+    const med = appState.catalog.find(function(m) { return m.id === row.medId; });
+    if (!med) return;
+
+    const newMult = getUnitMultiplier(med, newUnitType);
+    const newBaseQty = row.displayQty * newMult;
+    const otherRowsBase = getCartTotalBaseQtyForMed(row.medId) - row.baseQty;
+    const avail = getAvailableStockForMed(row.medId);
+
+    if (otherRowsBase + newBaseQty > avail) {
+      showToast("Not enough stock for " + row.displayQty + " " + getUnitDisplayLabel(med, newUnitType) + " (" + newBaseQty + " pcs needed, " + (avail - otherRowsBase) + " pcs left).");
+      renderCart();
+      return;
+    }
+
+    row.unitType = newUnitType;
+    row.unitLabel = getUnitDisplayLabel(med, newUnitType);
+    row.multiplier = newMult;
+    row.unitSellPrice = Number((med.sellPrice * newMult).toFixed(2));
+    row.baseQty = newBaseQty;
+    renderCart();
+  }
+
+  function updateCartRowQty(rowIdx, delta) {
+    const row = cart[rowIdx];
+    if (!row) return;
+    const nextDisplayQty = row.displayQty + delta;
+
+    if (nextDisplayQty <= 0) {
+      cart.splice(rowIdx, 1);
+      renderCart();
+      return;
+    }
+
+    const nextBaseQty = nextDisplayQty * row.multiplier;
+    const otherRowsBase = getCartTotalBaseQtyForMed(row.medId) - row.baseQty;
+    const avail = getAvailableStockForMed(row.medId);
+
+    if (otherRowsBase + nextBaseQty > avail) {
+      showToast("Only " + (avail - otherRowsBase) + " base pcs remaining in stock.");
+      return;
+    }
+
+    row.displayQty = nextDisplayQty;
+    row.baseQty = nextBaseQty;
+    renderCart();
+  }
+
+  function clearCart() {
+    cart = [];
+    document.getElementById("cartDiscount").value = 0;
+    document.getElementById("cartCashReceived").value = "";
+    document.getElementById("custPhoneInput").value = "";
+    document.getElementById("custNameInput").value = "";
+    document.getElementById("returningCustBadge").style.display = "none";
+    renderCart();
+  }
+
+  function handleCustomerPhoneInput() {
+    const rawVal = document.getElementById("custPhoneInput").value;
+    const normalized = normPhone(rawVal);
+    const badge = document.getElementById("returningCustBadge");
+    const nameInput = document.getElementById("custNameInput");
+
+    if (!normalized) {
+      badge.style.display = "none";
+      return;
+    }
+
+    const found = appState.customers.find(function(c) {
+      return normPhone(c.phone) === normalized;
+    });
+
+    if (found) {
+      if (found.name) nameInput.value = found.name;
+      badge.textContent = "Returning customer matched (" + found.phone + ")";
+      badge.style.display = "block";
+    } else {
+      badge.style.display = "none";
+    }
+  }
+
+  function simulateFifoCost(medId, baseQty) {
+    const batches = appState.batches
+      .filter(function(b) { return b.medId === medId && b.remainingQty > 0; })
+      .map(function(b) { return Object.assign({}, b); })
+      .sort(function(a, b) { return a.date.localeCompare(b.date) || a.batchNo.localeCompare(b.batchNo); });
+
+    let needed = baseQty;
+    let totalNetCost = 0;
+    let touchesExpired = false;
+
+    for (let i = 0; i < batches.length; i++) {
+      const b = batches[i];
+      if (needed <= 0) break;
+      const take = Math.min(b.remainingQty, needed);
+      totalNetCost += take * b.netUnitCost;
+      if (getBatchExpiryStatus(b).code === "expired") touchesExpired = true;
+      needed -= take;
+    }
+    return { totalNetCost: totalNetCost, touchesExpired: touchesExpired };
+  }
+
+  function getCurrentGrandTotal() {
+    const subtotal = cart.reduce(function(s, item) {
+      return s + (item.unitSellPrice * item.displayQty);
+    }, 0);
+    const discount = Math.max(0, Number(document.getElementById("cartDiscount").value) || 0);
+    return Number(Math.max(0, subtotal - discount).toFixed(2));
+  }
+
+  function updateCashChangeDisplay() {
+    const grandTotal = getCurrentGrandTotal();
+    const rawVal = document.getElementById("cartCashReceived").value;
+    const labelEl = document.getElementById("cartChangeLabel");
+    const valEl = document.getElementById("cartChangeAmount");
+
+    if (rawVal === "" || rawVal === null) {
+      labelEl.textContent = "Return / Change";
+      valEl.textContent = "0.00 TK";
+      valEl.className = "change-val";
+      return;
+    }
+
+    const cash = Number(rawVal) || 0;
+    const diff = Number((cash - grandTotal).toFixed(2));
+
+    if (diff >= 0) {
+      labelEl.textContent = "Return / Change";
+      valEl.textContent = diff.toFixed(2) + " TK";
+      valEl.className = "change-val";
+    } else {
+      labelEl.textContent = "Short / Due";
+      valEl.textContent = Math.abs(diff).toFixed(2) + " TK";
+      valEl.className = "change-val due";
+    }
+  }
+
+  function renderCart() {
+    const listEl = document.getElementById("cartList");
+    const alertEl = document.getElementById("cartExpiredAlert");
+    const totalBasePcs = cart.reduce(function(s, c) { return s + c.baseQty; }, 0);
+    document.getElementById("cartUnitCount").textContent = totalBasePcs + " base pcs/bottles selected";
+    clearNode(listEl);
+
+    if (cart.length === 0) {
+      listEl.appendChild(el("div", {
+        className: "cart-empty",
+        textContent: "Voucher is empty. Click any medicine card on the left to add."
+      }));
+      alertEl.style.display = "none";
+      document.getElementById("cartSubtotal").textContent = "0.00 TK";
+      document.getElementById("cartEstProfit").textContent = "0.00 TK";
+      document.getElementById("cartGrandTotal").textContent = "0.00 TK";
+      updateCashChangeDisplay();
+      return;
+    }
+
+    let subtotal = 0;
+    let estNetCOGS = 0;
+    const expiredMeds = [];
+
+    cart.forEach(function(item, idx) {
+      const med = appState.catalog.find(function(m) { return m.id === item.medId; }) || { pcsPerStrip: 1, stripsPerBox: 1 };
+      const pps = Math.max(1, Number(med.pcsPerStrip) || 1);
+      const spb = Math.max(1, Number(med.stripsPerBox) || 1);
+      const isBottle = pps === 1 && spb === 1;
+
+      const lineTotal = item.unitSellPrice * item.displayQty;
+      subtotal += lineTotal;
+      const sim = simulateFifoCost(item.medId, item.baseQty);
+      estNetCOGS += sim.totalNetCost;
+      if (sim.touchesExpired && expiredMeds.indexOf(item.name) === -1) expiredMeds.push(item.name);
+
+      const unitOptions = [];
+      if (isBottle) {
+        unitOptions.push(el("option", { value: "pcs", textContent: "Bottle" }));
+      } else {
+        unitOptions.push(el("option", { value: "pcs", textContent: "Pcs" }));
+        if (pps > 1) unitOptions.push(el("option", { value: "strip", textContent: "Strip (" + pps + ")" }));
+        if (spb > 1) unitOptions.push(el("option", { value: "box", textContent: "Box (" + (pps * spb) + ")" }));
+      }
+
+      const unitSelect = el("select", {
+        className: "unit-mini-select",
+        dataset: { cartUnit: "1", rowIdx: String(idx) }
+      }, unitOptions);
+      unitSelect.value = item.unitType;
+
+      const metaText = item.unitSellPrice.toFixed(2) + " TK x " + item.displayQty + " " + item.unitLabel +
+        (item.multiplier > 1 ? " (" + item.baseQty + " pcs)" : "") + " = " + lineTotal.toFixed(2) + " TK";
+
+      const controls = [unitSelect];
+      if (!isBottle) {
+        controls.push(el("button", {
+          type: "button",
+          className: "split-btn",
+          title: "Add another unit line (e.g. Strip + Pcs)",
+          dataset: { splitMed: String(item.medId) },
+          textContent: "+Line"
+        }));
+      }
+      controls.push(el("div", { className: "qty-box" }, [
+        el("button", { type: "button", className: "qty-btn", dataset: { rowIdx: String(idx), cartDelta: "-1" }, textContent: "-" }),
+        el("strong", { style: "min-width:18px; text-align:center; font-size:12.5px;", textContent: String(item.displayQty) }),
+        el("button", { type: "button", className: "qty-btn", dataset: { rowIdx: String(idx), cartDelta: "1" }, textContent: "+" })
+      ]));
+
+      const row = el("div", { className: "cart-row" }, [
+        el("div", { style: "min-width:0;" }, [
+          el("div", { className: "cart-row-name", textContent: item.name }),
+          el("div", { className: "cart-row-meta", textContent: metaText })
+        ]),
+        el("div", { className: "cart-controls" }, controls)
+      ]);
+      listEl.appendChild(row);
+    });
+
+    if (expiredMeds.length > 0) {
+      alertEl.style.display = "block";
+      alertEl.textContent = "EXPIRED BATCH WARNING: FIFO allocation includes expired stock for " + expiredMeds.join(", ") + ". Verify batch before dispensing!";
+    } else {
+      alertEl.style.display = "none";
+    }
+
+    const discount = Math.max(0, Number(document.getElementById("cartDiscount").value) || 0);
+    const grandTotal = Math.max(0, subtotal - discount);
+    const estGrossProfit = grandTotal - estNetCOGS;
+
+    document.getElementById("cartSubtotal").textContent = subtotal.toFixed(2) + " TK";
+    document.getElementById("cartEstProfit").textContent = estGrossProfit.toFixed(2) + " TK";
+    document.getElementById("cartGrandTotal").textContent = grandTotal.toFixed(2) + " TK";
+    updateCashChangeDisplay();
+  }
+
+  function submitSale() {
+    if (cart.length === 0) {
+      showToast("Add at least one medicine to the voucher.");
+      return;
+    }
+
+    const grandTotal = getCurrentGrandTotal();
+    const rawCash = document.getElementById("cartCashReceived").value;
+    const cashReceived = rawCash !== "" ? Number(rawCash) : grandTotal;
+
+    if (rawCash !== "" && cashReceived < grandTotal) {
+      showToast("Cash received cannot be less than Grand Total (" + grandTotal.toFixed(2) + " TK).");
+      return;
+    }
+
+    const btn = document.getElementById("completeSaleBtn");
+    btn.disabled = true;
+    btn.textContent = "Saving Invoice...";
+    setSyncIndicator(true, "Recording sale & checking low stock alerts...");
+
+    const payload = {
+      editInvoiceNo: editInvoiceNo,
+      customerPhone: normPhone(document.getElementById("custPhoneInput").value),
+      customerName: document.getElementById("custNameInput").value.trim(),
+      discount: Number(document.getElementById("cartDiscount").value) || 0,
+      cashReceived: cashReceived,
+      items: cart
+    };
+
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.textContent = "Complete Sale & Print 80mm";
+          editInvoiceNo = null;
+          document.getElementById("editSaleBanner").style.display = "none";
+          clearCart();
+          applyServerResponse(res.appData, "Sale saved to Google Sheets");
+          if (res.invoice) open80mmReceiptModal(res.invoice);
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.textContent = "Complete Sale & Print 80mm";
+          setSyncIndicator(false, "Sale failed");
+          showToast("Error: " + err.message);
+        })
+        .completeOrUpdateSale(payload);
+    }
+  }
+
+  function open80mmReceiptModal(inv) {
+    const s = appState.settings;
+    const box = document.getElementById("thermalReceiptContent");
+    clearNode(box);
+
+    box.appendChild(el("div", { className: "thermal-header" }, [
+      el("h3", { textContent: s.shopName || "MediCare Pharmacy" }),
+      el("div", { textContent: s.shopAddress || "" }),
+      el("div", { textContent: "Tel: " + (s.shopPhone || "") })
+    ]));
+
+    const metaNodes = [
+      el("div", { textContent: "Invoice: " + inv.invoiceNo }),
+      el("div", { textContent: "Date: " + inv.date + " " + (inv.time || "") })
+    ];
+    const custLines = [];
+    if (inv.customerName) custLines.push("Customer: " + inv.customerName);
+    if (inv.customerPhone) custLines.push("Phone: " + inv.customerPhone);
+    if (custLines.length) metaNodes.push(el("div", { textContent: custLines.join(" | ") }));
+    box.appendChild(el("div", { className: "thermal-meta" }, metaNodes));
+
+    const tbody = el("tbody");
+    (inv.items || []).forEach(function(it) {
+      const dQty = it.displayQty || it.qty;
+      const uLbl = it.unitLabel || "Pcs";
+      const uPrice = it.unitSellPrice || it.sellPrice;
+      tbody.appendChild(el("tr", null, [
+        el("td", { textContent: it.name }),
+        el("td", { style: "text-align:center;", textContent: dQty + " " + uLbl }),
+        el("td", { style: "text-align:right;", textContent: Number(uPrice).toFixed(2) }),
+        el("td", { style: "text-align:right;", textContent: Number(it.lineTotal).toFixed(2) })
+      ]));
+    });
+
+    box.appendChild(el("table", { className: "thermal-table" }, [
+      el("thead", null, el("tr", null, [
+        el("th", { textContent: "Item" }),
+        el("th", { style: "text-align:center;", textContent: "Qty" }),
+        el("th", { style: "text-align:right;", textContent: "Price" }),
+        el("th", { style: "text-align:right;", textContent: "Total" })
+      ])),
+      tbody
+    ]));
+
+    const gTotal = Number(inv.grandTotal) || 0;
+    const cashRec = inv.cashReceived !== undefined ? Number(inv.cashReceived) : gTotal;
+    const changeAmt = inv.changeAmount !== undefined ? Number(inv.changeAmount) : Math.max(0, cashRec - gTotal);
+
+    box.appendChild(el("div", { className: "thermal-totals" }, [
+      el("div", { className: "thermal-row" }, [
+        el("span", { textContent: "Subtotal:" }),
+        el("span", { textContent: Number(inv.subtotal).toFixed(2) + " TK" })
+      ]),
+      el("div", { className: "thermal-row" }, [
+        el("span", { textContent: "Discount:" }),
+        el("span", { textContent: "-" + Number(inv.discount).toFixed(2) + " TK" })
+      ]),
+      el("div", { className: "thermal-row thermal-grand" }, [
+        el("span", { textContent: "GRAND TOTAL:" }),
+        el("span", { textContent: gTotal.toFixed(2) + " TK" })
+      ]),
+      el("div", { className: "thermal-row" }, [
+        el("span", { textContent: "Cash Received:" }),
+        el("span", { textContent: cashRec.toFixed(2) + " TK" })
+      ]),
+      el("div", { className: "thermal-row", style: "font-weight:700;" }, [
+        el("span", { textContent: "Change Returned:" }),
+        el("span", { textContent: changeAmt.toFixed(2) + " TK" })
+      ])
+    ]));
+
+    box.appendChild(el("div", {
+      className: "thermal-footer",
+      textContent: s.shopFooter || "Thank you for your visit."
+    }));
+
+    document.getElementById("receiptModal").classList.add("open");
+  }
+
+  function renderSalesTable() {
+    const invQ = document.getElementById("salesInvFilter").value.toLowerCase().trim();
+    const phoneQ = document.getElementById("salesPhoneFilter").value.toLowerCase().trim();
+
+    const filtered = appState.sales.filter(function(s) {
+      const mInv = !invQ || s.invoiceNo.toLowerCase().includes(invQ);
+      const mPh = !phoneQ || (s.customerPhone || "").toLowerCase().includes(phoneQ);
+      return mInv && mPh;
+    });
+
+    const res = paginate(filtered, salesPage);
+    const tbody = document.getElementById("salesTableBody");
+    clearNode(tbody);
+
+    if (res.slice.length === 0) {
+      tbody.appendChild(el("tr", null, el("td", {
+        colspan: "8",
+        style: "text-align:center; padding:24px; color:var(--text-muted);",
+        textContent: "No sales records found."
+      })));
+    } else {
+      res.slice.forEach(function(s) {
+        const itemsSummary = (s.items || []).map(function(i) {
+          return i.name + " (" + (i.displayQty || i.qty) + " " + (i.unitLabel || "Pcs") + ")";
+        }).join(", ");
+        const custText = [s.customerName, s.customerPhone].filter(Boolean).join(" - ") || "Walk-in";
+        const isRet = s.status === "Returned";
+
+        tbody.appendChild(el("tr", null, [
+          el("td", null, el("strong", { textContent: s.invoiceNo })),
+          el("td", null, [
+            document.createTextNode(s.date),
+            el("br"),
+            el("small", { style: "color:var(--text-muted);", textContent: s.time || "" })
+          ]),
+          el("td", { textContent: custText }),
+          el("td", { style: "max-width:220px;", textContent: itemsSummary }),
+          el("td", null, el("strong", { textContent: Number(s.grandTotal).toFixed(2) + " TK" })),
+          el("td", null, el("span", {
+            className: "badge " + (isRet ? "badge-gray" : "badge-green"),
+            textContent: isRet ? "0.00 TK" : "+" + Number(s.grossProfit).toFixed(2) + " TK"
+          })),
+          el("td", null, el("span", {
+            className: "badge " + (isRet ? "badge-red" : "badge-blue"),
+            textContent: s.status
+          })),
+          el("td", null, el("button", {
+            type: "button",
+            className: "dots-btn",
+            dataset: { salesMenu: s.invoiceNo },
+            textContent: "..."
+          }))
+        ]));
+      });
+    }
+
+    renderPaginationBar("salesPagination", salesPage, res.totalPages, res.total, function(p) { salesPage = p; renderSalesTable(); });
+  }
+
+  function openSalesMenu(ev, invoiceNo) {
+    ev.stopPropagation();
+    const sale = appState.sales.find(function(s) { return s.invoiceNo === invoiceNo; });
+    if (!sale) return;
+
+    const menu = document.getElementById("floatingMenu");
+    clearNode(menu);
+    menu.appendChild(el("button", {
+      type: "button",
+      dataset: { menuAction: "viewInv", targetId: invoiceNo },
+      textContent: "View / Print 80mm"
+    }));
+    if (sale.status !== "Returned") {
+      menu.appendChild(el("button", {
+        type: "button",
+        dataset: { menuAction: "editInv", targetId: invoiceNo },
+        textContent: "Edit Sale"
+      }));
+      menu.appendChild(el("button", {
+        type: "button",
+        className: "danger-item",
+        dataset: { menuAction: "returnInv", targetId: invoiceNo },
+        textContent: "Full Return"
+      }));
+    }
+    positionFloatingMenu(menu, ev.target.closest(".dots-btn"));
+  }
+
+  function viewInvoiceFromList(invoiceNo) {
+    const sale = appState.sales.find(function(s) { return s.invoiceNo === invoiceNo; });
+    if (sale) open80mmReceiptModal(sale);
+  }
+
+  function startEditSale(invoiceNo) {
+    const sale = appState.sales.find(function(s) { return s.invoiceNo === invoiceNo; });
+    if (!sale) return;
+
+    editInvoiceNo = sale.invoiceNo;
+    cart = (sale.items || []).map(function(i) {
+      const mult = Number(i.multiplier) || 1;
+      const dQty = Number(i.displayQty) || Number(i.qty) || 1;
+      const bQty = Number(i.baseQty) || Number(i.qty) || (dQty * mult);
+      const uSell = Number(i.unitSellPrice) || Number(i.sellPrice) || 0;
+      return {
+        medId: i.medId,
+        name: i.name,
+        generic: i.generic,
+        baseSellPrice: mult > 0 ? uSell / mult : uSell,
+        unitType: i.unitType || "pcs",
+        unitLabel: i.unitLabel || "Pcs",
+        multiplier: mult,
+        displayQty: dQty,
+        unitSellPrice: uSell,
+        baseQty: bQty
+      };
+    });
+
+    document.getElementById("cartDiscount").value = sale.discount || 0;
+    document.getElementById("cartCashReceived").value = sale.cashReceived !== undefined ? sale.cashReceived : sale.grandTotal;
+    document.getElementById("custPhoneInput").value = sale.customerPhone || "";
+    document.getElementById("custNameInput").value = sale.customerName || "";
+    document.getElementById("editSaleInvLabel").textContent = sale.invoiceNo;
+    document.getElementById("editSaleBanner").style.display = "flex";
+    document.getElementById("completeSaleBtn").textContent = "Update Sale & Print 80mm";
+
+    switchView("posView", document.querySelector("[data-view=posView]"));
+    renderCart();
+  }
+
+  function cancelEditSale() {
+    editInvoiceNo = null;
+    document.getElementById("editSaleBanner").style.display = "none";
+    document.getElementById("completeSaleBtn").textContent = "Complete Sale & Print 80mm";
+    clearCart();
+  }
+
+  function triggerFullSaleReturn(invoiceNo) {
+    if (!confirm("Process full customer return for " + invoiceNo + "? All quantities will be restored to FIFO stock batches.")) return;
+
+    setSyncIndicator(true, "Reversing sale & restoring stock...");
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(fresh) { applyServerResponse(fresh, "Full return processed for " + invoiceNo); })
+        .withFailureHandler(function(err) { showToast("Error: " + err.message); })
+        .processFullSaleReturn(invoiceNo);
+    }
+  }
+
+  function generateNextBatchNo() {
+    const yr = new Date().getFullYear();
+    return "B-" + yr + "-" + String(appState.batches.length + 1).padStart(3, "0");
+  }
+
+  function openCombo(id) {
+    document.querySelectorAll(".combo-list").forEach(function(box) { box.style.display = "none"; });
+    const box = document.getElementById(id);
+    box.style.display = "block";
+    if (id === "companyCombo") filterCombo("companyCombo", document.getElementById("purCompany").value);
+    if (id === "medCombo") filterCombo("medCombo", document.getElementById("purMedName").value);
+  }
+
+  function filterCombo(id, query) {
+    const q = (query || "").toLowerCase().trim();
+    const box = document.getElementById(id);
+    box.style.display = "block";
+    clearNode(box);
+
+    if (id === "companyCombo") {
+      const companies = Array.from(new Set(appState.catalog.map(function(c) { return c.company; }).filter(Boolean))).sort();
+      const matches = companies.filter(function(c) { return c.toLowerCase().includes(q); });
+      if (matches.length === 0) {
+        box.appendChild(el("div", { className: "combo-item", style: "color:var(--text-muted);", textContent: "No matching company" }));
+      } else {
+        matches.forEach(function(c) {
+          box.appendChild(el("div", { className: "combo-item", dataset: { selectCompany: c }, textContent: c }));
+        });
+      }
+    } else {
+      const compFilter = document.getElementById("purCompany").value.trim();
+      const matches = appState.catalog.filter(function(m) {
+        return (!compFilter || m.company.toLowerCase() === compFilter.toLowerCase()) &&
+          (m.name.toLowerCase().includes(q) || m.generic.toLowerCase().includes(q));
+      });
+      if (matches.length === 0) {
+        box.appendChild(el("div", { className: "combo-item", style: "color:var(--text-muted);", textContent: "Add medicine in Company & Medicine tab first" }));
+      } else {
+        matches.forEach(function(m) {
+          box.appendChild(el("div", { className: "combo-item", dataset: { selectMed: String(m.id) } }, [
+            el("strong", { textContent: m.name + " " }),
+            el("small", { style: "color:var(--text-muted);", textContent: "(" + m.generic + " | " + m.pcsPerStrip + " pcs/str, " + m.stripsPerBox + " str/box)" })
+          ]));
+        });
+      }
+    }
+  }
+
+  function selectPurchaseCompany(comp) {
+    document.getElementById("purCompany").value = comp;
+    document.getElementById("companyCombo").style.display = "none";
+  }
+
+  function selectPurchaseMedicine(medId) {
+    const med = appState.catalog.find(function(m) { return m.id === medId; });
+    if (!med) return;
+    selectedMedForPurchase = med;
+    document.getElementById("purCompany").value = med.company;
+    document.getElementById("purMedName").value = med.name;
+    document.getElementById("purGeneric").value = med.generic + " (" + med.pcsPerStrip + " pcs/str, " + med.stripsPerBox + " str/box)";
+    document.getElementById("medCombo").style.display = "none";
+    updatePurchaseUnitLabels();
+  }
+
+  function updatePurchaseUnitLabels() {
+    const uType = document.getElementById("purUnitType").value;
+    const qLbl = document.getElementById("purQtyLabel");
+    const gLbl = document.getElementById("purGrossLabel");
+    if (uType === "box") {
+      qLbl.textContent = "Quantity (Boxes) *";
+      gLbl.textContent = "Gross Price per Box (TK) *";
+    } else if (uType === "strip") {
+      qLbl.textContent = "Quantity (Strips) *";
+      gLbl.textContent = "Gross Price per Strip (TK) *";
+    } else {
+      qLbl.textContent = "Quantity (Pcs / Bottles) *";
+      gLbl.textContent = "Gross Price per Pc / Bottle (TK) *";
+    }
+    previewPurchaseCalc();
+  }
+
+  function previewPurchaseCalc() {
+    const uType = document.getElementById("purUnitType").value;
+    const mult = selectedMedForPurchase ? getUnitMultiplier(selectedMedForPurchase, uType) : 1;
+    const rawQty = Number(document.getElementById("purQty").value) || 0;
+    const rawGross = Number(document.getElementById("purGrossPrice").value) || 0;
+    const rate = Number(document.getElementById("purCommRate").value) || 0;
+
+    const totalBaseQty = rawQty * mult;
+    const grossPerBasePc = mult > 0 ? rawGross / mult : rawGross;
+    const netPerBasePc = grossPerBasePc * (1 - rate / 100);
+    const totalGross = rawQty * rawGross;
+    const netPayable = totalBaseQty * netPerBasePc;
+    const tradeDisc = totalGross - netPayable;
+
+    document.getElementById("prevTotalBaseQty").textContent = totalBaseQty + " Pcs";
+    document.getElementById("prevNetUnit").textContent = netPerBasePc.toFixed(2) + " TK";
+    document.getElementById("prevTradeDisc").textContent = tradeDisc.toFixed(2) + " TK";
+    document.getElementById("prevNetPayable").textContent = netPayable.toFixed(2) + " TK";
+  }
+
+  function submitPurchase() {
+    const company = document.getElementById("purCompany").value.trim();
+    const medName = document.getElementById("purMedName").value.trim();
+    const uType = document.getElementById("purUnitType").value;
+    const rawQty = Number(document.getElementById("purQty").value);
+    const rawGross = Number(document.getElementById("purGrossPrice").value);
+    const commRate = Number(document.getElementById("purCommRate").value) || 0;
+    const expiry = document.getElementById("purExpiry").value;
+    const alertDays = Number(document.getElementById("purAlertDays").value) || 15;
+
+    if (!company || !medName || !rawQty || !rawGross || !expiry) {
+      showToast("Please fill all required purchase fields.");
+      return;
+    }
+
+    const catalogMatch = selectedMedForPurchase || appState.catalog.find(function(c) { return c.name.toLowerCase() === medName.toLowerCase(); });
+    if (!catalogMatch) {
+      showToast("Please select a registered medicine from the dropdown.");
+      return;
+    }
+
+    const mult = getUnitMultiplier(catalogMatch, uType);
+    const baseQty = rawQty * mult;
+    const grossUnitCost = mult > 0 ? rawGross / mult : rawGross;
+    const unitLabel = rawQty + " " + getUnitDisplayLabel(catalogMatch, uType);
+
+    const btn = document.getElementById("savePurchaseBtn");
+    btn.disabled = true;
+    btn.textContent = "Saving Batch...";
+    setSyncIndicator(true, "Saving purchase batch to Google Sheets...");
+
+    const payload = {
+      isEdit: Boolean(editPurchaseBatchNo),
+      batchNo: document.getElementById("purBatchNo").value,
+      company: company,
+      medId: catalogMatch.id,
+      medName: catalogMatch.name,
+      generic: catalogMatch.generic,
+      baseQty: baseQty,
+      qty: baseQty,
+      grossUnitCost: grossUnitCost,
+      commRate: commRate,
+      expiry: expiry,
+      alertDays: alertDays,
+      purchaseUnitLabel: unitLabel
+    };
+
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(fresh) {
+          btn.disabled = false;
+          btn.textContent = "Save Stock Purchase Batch";
+          resetPurchaseForm();
+          applyServerResponse(fresh, "Purchase saved (" + baseQty + " base pcs added)");
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.textContent = "Save Stock Purchase Batch";
+          showToast("Error: " + err.message);
+        })
+        .savePurchaseBatch(payload);
+    }
+  }
+
+  function resetPurchaseForm() {
+    editPurchaseBatchNo = null;
+    selectedMedForPurchase = null;
+    document.getElementById("purchaseFormTitle").textContent = "Record Wholesale Stock Purchase";
+    document.getElementById("cancelPurchaseEditBtn").style.display = "none";
+    document.getElementById("purCompany").value = "";
+    document.getElementById("purMedName").value = "";
+    document.getElementById("purGeneric").value = "";
+    document.getElementById("purUnitType").value = "pcs";
+    document.getElementById("purBatchNo").value = generateNextBatchNo();
+    document.getElementById("purQty").value = "";
+    document.getElementById("purGrossPrice").value = "";
+    document.getElementById("purCommRate").value = "0";
+    document.getElementById("purExpiry").value = "";
+    document.getElementById("purAlertDays").value = "15";
+    updatePurchaseUnitLabels();
+  }
+
+  function renderPurchaseTable() {
+    const sorted = appState.batches.slice().reverse();
+    const res = paginate(sorted, purchasePage);
+    const tbody = document.getElementById("purchaseTableBody");
+    clearNode(tbody);
+
+    if (res.slice.length === 0) {
+      tbody.appendChild(el("tr", null, el("td", {
+        colspan: "8",
+        style: "text-align:center; padding:24px; color:var(--text-muted);",
+        textContent: "No purchase batches recorded yet."
+      })));
+    } else {
+      res.slice.forEach(function(b) {
+        const netPaid = (b.initialQty * b.netUnitCost).toFixed(2);
+        tbody.appendChild(el("tr", null, [
+          el("td", null, [
+            el("strong", { textContent: b.batchNo }),
+            el("br"),
+            el("small", { style: "color:var(--text-muted);", textContent: "Exp: " + b.expiry })
+          ]),
+          el("td", { textContent: b.company }),
+          el("td", null, [
+            el("strong", { textContent: b.medName }),
+            el("br"),
+            el("small", { style: "color:var(--text-muted);", textContent: b.generic })
+          ]),
+          el("td", { textContent: b.remainingQty + " / " + b.initialQty + " pcs" }),
+          el("td", null, [
+            document.createTextNode(b.grossUnitCost.toFixed(2) + " / "),
+            el("strong", { textContent: b.netUnitCost.toFixed(2) + " TK" })
+          ]),
+          el("td", null, el("span", { className: "badge badge-amber", textContent: b.commRate + "%" })),
+          el("td", null, el("strong", { textContent: netPaid + " TK" })),
+          el("td", null, el("button", {
+            type: "button",
+            className: "dots-btn",
+            dataset: { batchMenu: b.batchNo },
+            textContent: "..."
+          }))
+        ]));
+      });
+    }
+    renderPaginationBar("purchasePagination", purchasePage, res.totalPages, res.total, function(p) { purchasePage = p; renderPurchaseTable(); });
+  }
+
+  function openBatchMenu(ev, batchNo) {
+    ev.stopPropagation();
+    const batch = appState.batches.find(function(b) { return b.batchNo === batchNo; });
+    if (!batch) return;
+
+    const menu = document.getElementById("floatingMenu");
+    clearNode(menu);
+    menu.appendChild(el("button", {
+      type: "button",
+      dataset: { menuAction: "editBatch", targetId: batchNo },
+      textContent: "Edit Entry"
+    }));
+    if (batch.remainingQty > 0) {
+      menu.appendChild(el("button", {
+        type: "button",
+        dataset: { menuAction: "dispBatch", targetId: batchNo },
+        textContent: "Return / Destroy"
+      }));
+    }
+    menu.appendChild(el("button", {
+      type: "button",
+      className: "danger-item",
+      dataset: { menuAction: "delBatch", targetId: batchNo },
+      textContent: "Delete Entry"
+    }));
+    positionFloatingMenu(menu, ev.target.closest(".dots-btn"));
+  }
+
+  function startEditBatch(batchNo) {
+    const b = appState.batches.find(function(x) { return x.batchNo === batchNo; });
+    if (!b) return;
+
+    editPurchaseBatchNo = b.batchNo;
+    selectedMedForPurchase = appState.catalog.find(function(c) { return c.id === b.medId; }) || null;
+    document.getElementById("purchaseFormTitle").textContent = "Edit Batch (Base Pcs): " + b.batchNo;
+    document.getElementById("cancelPurchaseEditBtn").style.display = "inline-flex";
+    document.getElementById("purCompany").value = b.company;
+    document.getElementById("purMedName").value = b.medName;
+    document.getElementById("purGeneric").value = b.generic;
+    document.getElementById("purUnitType").value = "pcs";
+    document.getElementById("purBatchNo").value = b.batchNo;
+    document.getElementById("purQty").value = b.initialQty;
+    document.getElementById("purGrossPrice").value = b.grossUnitCost;
+    document.getElementById("purCommRate").value = b.commRate;
+    document.getElementById("purExpiry").value = b.expiry;
+    document.getElementById("purAlertDays").value = b.alertDays;
+    updatePurchaseUnitLabels();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function triggerDeleteBatch(batchNo) {
+    if (!confirm("Delete batch " + batchNo + "?")) return;
+    setSyncIndicator(true, "Deleting batch...");
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(fresh) { applyServerResponse(fresh, "Batch deleted"); })
+        .withFailureHandler(function(err) { showToast("Error: " + err.message); })
+        .deletePurchaseBatch(batchNo);
+    }
+  }
+
+  function renderPriceTable() {
+    const q = document.getElementById("priceSearch").value.toLowerCase().trim();
+    const filtered = appState.catalog.filter(function(m) {
+      return m.name.toLowerCase().includes(q) || m.generic.toLowerCase().includes(q) || m.company.toLowerCase().includes(q);
+    });
+
+    const res = paginate(filtered, pricePage);
+    const tbody = document.getElementById("priceTableBody");
+    clearNode(tbody);
+
+    res.slice.forEach(function(m) {
+      const medBatches = appState.batches.filter(function(b) { return b.medId === m.id && b.remainingQty > 0; });
+      const stock = medBatches.reduce(function(s, b) { return s + b.remainingQty; }, 0);
+      const latestBatch = medBatches[medBatches.length - 1];
+      const netCost = latestBatch ? latestBatch.netUnitCost : 0;
+      const pps = Math.max(1, Number(m.pcsPerStrip) || 1);
+      const spb = Math.max(1, Number(m.stripsPerBox) || 1);
+      const isBottle = pps === 1 && spb === 1;
+
+      const packText = isBottle ? "1 Bottle" : (pps + " pcs/str | " + spb + " str/box");
+      const stripBoxText = isBottle
+        ? m.sellPrice.toFixed(2) + " TK / Bottle"
+        : "Strip: " + (m.sellPrice * pps).toFixed(2) + " TK | Box: " + (m.sellPrice * pps * spb).toFixed(2) + " TK";
+
+      tbody.appendChild(el("tr", null, [
+        el("td", null, [
+          el("strong", { textContent: m.name }),
+          el("br"),
+          el("small", { style: "color:var(--text-muted);", textContent: m.generic + " (" + m.company + ")" })
+        ]),
+        el("td", { textContent: packText }),
+        el("td", { textContent: stock + (isBottle ? " btl" : " pcs") }),
+        el("td", { textContent: netCost ? netCost.toFixed(2) + " TK" : "N/A" }),
+        el("td", null, el("input", {
+          type: "number",
+          id: "spInput_" + m.id,
+          className: "input-field",
+          style: "width:105px; padding:5px 8px;",
+          step: "0.01",
+          value: m.sellPrice.toFixed(2)
+        })),
+        el("td", null, el("span", { className: "badge badge-blue", textContent: stripBoxText })),
+        el("td", null, el("button", {
+          type: "button",
+          className: "btn btn-primary btn-sm",
+          dataset: { updatePrice: String(m.id) },
+          textContent: "Update"
+        }))
+      ]));
+    });
+
+    renderPaginationBar("pricePagination", pricePage, res.totalPages, res.total, function(p) { pricePage = p; renderPriceTable(); });
+  }
+
+  function saveRowSellingPrice(medId) {
+    const val = Number(document.getElementById("spInput_" + medId).value);
+    if (isNaN(val) || val < 0) return showToast("Enter a valid selling price.");
+    setSyncIndicator(true, "Updating selling price...");
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(fresh) { applyServerResponse(fresh, "Selling price updated"); })
+        .withFailureHandler(function(err) { showToast("Error: " + err.message); })
+        .updateSellingPrice(medId, val);
+    }
+  }
+
+  function renderExpiryTable() {
+    const activeBatches = appState.batches.filter(function(b) { return b.remainingQty > 0; });
+    let alertCount = 0;
+
+    activeBatches.forEach(function(b) {
+      const st = getBatchExpiryStatus(b);
+      if (st.code === "expired" || st.code === "warning") alertCount++;
+    });
+    document.getElementById("expiryNavBadge").textContent = alertCount;
+
+    activeBatches.sort(function(a, b) { return a.expiry.localeCompare(b.expiry); });
+    const res = paginate(activeBatches, expiryPage);
+    const tbody = document.getElementById("expiryTableBody");
+    clearNode(tbody);
+
+    if (res.slice.length === 0) {
+      tbody.appendChild(el("tr", null, el("td", {
+        colspan: "8",
+        style: "text-align:center; padding:24px; color:var(--text-muted);",
+        textContent: "No active stock batches found."
+      })));
+    } else {
+      res.slice.forEach(function(b) {
+        const st = getBatchExpiryStatus(b);
+        const carryingVal = (b.remainingQty * b.netUnitCost).toFixed(2);
+        const badgeCls = st.code === "expired" ? "badge-red" : (st.code === "warning" ? "badge-amber" : "badge-green");
+
+        tbody.appendChild(el("tr", null, [
+          el("td", null, el("strong", { textContent: b.batchNo })),
+          el("td", null, [
+            el("strong", { textContent: b.medName }),
+            el("br"),
+            el("small", { style: "color:var(--text-muted);", textContent: b.company })
+          ]),
+          el("td", { textContent: b.expiry }),
+          el("td", { textContent: b.alertDays + " days prior" }),
+          el("td", { textContent: b.remainingQty + " pcs" }),
+          el("td", null, el("strong", { textContent: carryingVal + " TK" })),
+          el("td", null, el("span", { className: "badge " + badgeCls, textContent: st.label })),
+          el("td", null, el("button", {
+            type: "button",
+            className: "btn btn-danger btn-sm",
+            dataset: { dispBatch: b.batchNo },
+            textContent: "Return / Destroy"
+          }))
+        ]));
+      });
+    }
+    renderPaginationBar("expiryPagination", expiryPage, res.totalPages, res.total, function(p) { expiryPage = p; renderExpiryTable(); });
+  }
+
+  function openDispositionModal(batchNo) {
+    const b = appState.batches.find(function(x) { return x.batchNo === batchNo; });
+    if (!b) return;
+    dispositionBatchNo = batchNo;
+    const carrying = (b.remainingQty * b.netUnitCost).toFixed(2);
+    const qtyInput = document.getElementById("dispQtyInput");
+    qtyInput.max = b.remainingQty;
+    qtyInput.value = b.remainingQty;
+
+    document.getElementById("dispModalDesc").textContent =
+      "Batch " + b.batchNo + " (" + b.medName + ") has " + b.remainingQty + " pcs remaining (Net Cost: " + b.netUnitCost.toFixed(2) + " TK/pc, Total Carrying Value: " + carrying + " TK).";
+    document.getElementById("dispositionModal").classList.add("open");
+  }
+
+  function confirmDisposition(actionType) {
+    if (!dispositionBatchNo) return;
+    const qtyVal = Number(document.getElementById("dispQtyInput").value) || 0;
+    if (qtyVal <= 0) return showToast("Enter a valid quantity.");
+
+    closeModal("dispositionModal");
+    setSyncIndicator(true, "Processing batch disposition...");
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(fresh) {
+          const msg = actionType === "return"
+            ? "Returned " + qtyVal + " pcs to supplier (0.00 TK Loss)"
+            : "Destroyed " + qtyVal + " pcs & recorded IAS 2 write-off";
+          applyServerResponse(fresh, msg);
+        })
+        .withFailureHandler(function(err) { showToast("Error: " + err.message); })
+        .processBatchDispositionQty(dispositionBatchNo, actionType, qtyVal);
+    }
+  }
+
+  function handleImageFile(ev) {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement("canvas");
+        const maxW = 220;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        uploadedBase64Img = canvas.toDataURL("image/jpeg", 0.72);
+        document.getElementById("catImgUrl").value = "[Uploaded Compressed Image Ready]";
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function submitCatalogMedicine() {
+    const company = document.getElementById("catCompany").value.trim();
+    const name = document.getElementById("catName").value.trim();
+    const generic = document.getElementById("catGeneric").value.trim();
+    const pcsPerStrip = Math.max(1, Number(document.getElementById("catPcsPerStrip").value) || 1);
+    const stripsPerBox = Math.max(1, Number(document.getElementById("catStripsPerBox").value) || 1);
+    const sellPrice = Number(document.getElementById("catSellPrice").value);
+    const rawMinStock = Math.max(0, Number(document.getElementById("catMinStock").value) || 0);
+    const minStock = rawMinStock * getCatalogMinStockMultiplier();
+    const rawUrl = document.getElementById("catImgUrl").value.trim();
+    const finalImg = uploadedBase64Img || (rawUrl.startsWith("[") ? "" : rawUrl);
+
+    if (!company || !name || !generic || isNaN(sellPrice)) {
+      showToast("Please fill company, brand name, generic, and selling price.");
+      return;
+    }
+
+    const btn = document.getElementById("saveCatalogBtn");
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+    setSyncIndicator(true, "Saving medicine to catalog...");
+
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(fresh) {
+          btn.disabled = false;
+          btn.textContent = "Save Medicine";
+          resetCatalogForm();
+          applyServerResponse(fresh, "Medicine catalog updated");
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.textContent = "Save Medicine";
+          showToast("Error: " + err.message);
+        })
+        .saveCatalogMedicine({
+          id: editCatalogId,
+          company: company,
+          name: name,
+          generic: generic,
+          pcsPerStrip: pcsPerStrip,
+          stripsPerBox: stripsPerBox,
+          sellPrice: sellPrice,
+          minStock: minStock,
+          img: finalImg
+        });
+    }
+  }
+
+  function startEditCatalog(id) {
+    const m = appState.catalog.find(function(c) { return c.id === id; });
+    if (!m) return;
+    editCatalogId = m.id;
+    uploadedBase64Img = m.img && m.img.startsWith("data:") ? m.img : "";
+    document.getElementById("catFormTitle").textContent = "Edit Medicine: " + m.name;
+    document.getElementById("cancelCatEditBtn").style.display = "inline-flex";
+    document.getElementById("catCompany").value = m.company;
+    document.getElementById("catName").value = m.name;
+    document.getElementById("catGeneric").value = m.generic;
+
+    const pps = Math.max(1, Number(m.pcsPerStrip) || 1);
+    const spb = Math.max(1, Number(m.stripsPerBox) || 1);
+    const boxPcs = pps * spb;
+    const minPcs = m.minStock !== undefined ? Number(m.minStock) : 20;
+
+    document.getElementById("catPcsPerStrip").value = pps;
+    document.getElementById("catStripsPerBox").value = spb;
+    document.getElementById("catSellPrice").value = m.sellPrice;
+
+    if (minPcs > 0 && boxPcs > 1 && minPcs % boxPcs === 0) {
+      document.getElementById("catMinStockUnit").value = "box";
+      document.getElementById("catMinStock").value = minPcs / boxPcs;
+    } else if (minPcs > 0 && pps > 1 && minPcs % pps === 0) {
+      document.getElementById("catMinStockUnit").value = "strip";
+      document.getElementById("catMinStock").value = minPcs / pps;
+    } else {
+      document.getElementById("catMinStockUnit").value = "pcs";
+      document.getElementById("catMinStock").value = minPcs;
+    }
+
+    updateCatalogMinStockPreview();
+    document.getElementById("catImgUrl").value = uploadedBase64Img ? "[Existing Image]" : (m.img || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetCatalogForm() {
+    editCatalogId = null;
+    uploadedBase64Img = "";
+    document.getElementById("catFormTitle").textContent = "Add Medicine to Master Catalog";
+    document.getElementById("cancelCatEditBtn").style.display = "none";
+    document.getElementById("catCompany").value = "";
+    document.getElementById("catName").value = "";
+    document.getElementById("catGeneric").value = "";
+    document.getElementById("catPcsPerStrip").value = "10";
+    document.getElementById("catStripsPerBox").value = "10";
+    document.getElementById("catSellPrice").value = "";
+    document.getElementById("catMinStock").value = "20";
+    document.getElementById("catMinStockUnit").value = "pcs";
+    updateCatalogMinStockPreview();
+    document.getElementById("catImgUrl").value = "";
+    document.getElementById("catImgFile").value = "";
+  }
+
+  function renderCatalogTable() {
+    const res = paginate(appState.catalog, catalogPage);
+    const tbody = document.getElementById("catalogTableBody");
+    clearNode(tbody);
+
+    res.slice.forEach(function(m) {
+      const pps = Math.max(1, Number(m.pcsPerStrip) || 1);
+      const spb = Math.max(1, Number(m.stripsPerBox) || 1);
+      const isBottle = pps === 1 && spb === 1;
+      const minStock = Math.max(0, Number(m.minStock) || 0);
+
+      const curStock = appState.batches
+        .filter(function(b) { return b.medId === m.id && b.remainingQty > 0; })
+        .reduce(function(sum, b) { return sum + b.remainingQty; }, 0);
+
+      const isLow = minStock > 0 && curStock <= minStock;
+
+      const thumbNode = m.img
+        ? el("img", { src: m.img, style: "width:48px; height:32px; object-fit:cover; border-radius:5px;" })
+        : el("span", { style: "font-size:11px; color:var(--text-muted);", textContent: "No img" });
+
+      const packText = isBottle ? "1 Bottle" : (pps + " pcs/str | " + spb + " str/box");
+      const priceText = isBottle
+        ? m.sellPrice.toFixed(2) + " TK / Bottle"
+        : m.sellPrice.toFixed(2) + " TK (Str: " + (m.sellPrice * pps).toFixed(2) + " | Box: " + (m.sellPrice * pps * spb).toFixed(2) + ")";
+
+      let minDisplay = minStock + " pcs";
+      const boxPcs = pps * spb;
+      if (minStock > 0 && boxPcs > 1 && minStock % boxPcs === 0) {
+        minDisplay = (minStock / boxPcs) + " box (" + minStock + " pcs)";
+      } else if (minStock > 0 && pps > 1 && minStock % pps === 0) {
+        minDisplay = (minStock / pps) + " str (" + minStock + " pcs)";
+      }
+
+      const minStockBadge = minStock > 0
+        ? el("span", {
+            className: "badge " + (isLow ? "badge-amber" : "badge-gray"),
+            textContent: minDisplay + " | Cur: " + curStock
+          })
+        : el("span", { style: "color:var(--text-muted); font-size:12px;", textContent: "Off" });
+
+      tbody.appendChild(el("tr", null, [
+        el("td", null, thumbNode),
+        el("td", null, el("strong", { textContent: m.name })),
+        el("td", { textContent: m.generic + " (" + m.company + ")" }),
+        el("td", { textContent: packText }),
+        el("td", null, minStockBadge),
+        el("td", null, el("strong", { textContent: priceText })),
+        el("td", null, el("button", {
+          type: "button",
+          className: "btn btn-secondary btn-sm",
+          dataset: { editCat: String(m.id) },
+          textContent: "Edit"
+        }))
+      ]));
+    });
+
+    renderPaginationBar("catalogPagination", catalogPage, res.totalPages, res.total, function(p) { catalogPage = p; renderCatalogTable(); });
+  }
+
+  function getFilteredLedger() {
+    const from = document.getElementById("ledFromDate").value;
+    const to = document.getElementById("ledToDate").value;
+    const type = document.getElementById("ledTypeFilter").value;
+
+    return appState.ledger.filter(function(l) {
+      if (from && l.date < from) return false;
+      if (to && l.date > to) return false;
+      if (type && l.type !== type) return false;
+      return true;
+    });
+  }
+
+  function renderLedgerTable() {
+    const filtered = getFilteredLedger();
+    const res = paginate(filtered, ledgerPage);
+    const tbody = document.getElementById("ledgerTableBody");
+    clearNode(tbody);
+
+    if (res.slice.length === 0) {
+      tbody.appendChild(el("tr", null, el("td", {
+        colspan: "8",
+        style: "text-align:center; padding:24px; color:var(--text-muted);",
+        textContent: "No ledger transactions match the selected date range."
+      })));
+    } else {
+      res.slice.forEach(function(l) {
+        const pCls = l.profitImpact > 0 ? "badge-green" : (l.profitImpact < 0 ? "badge-red" : "badge-gray");
+        const pSign = l.profitImpact > 0 ? "+" : "";
+
+        tbody.appendChild(el("tr", null, [
+          el("td", { style: "white-space:nowrap;", textContent: l.date }),
+          el("td", null, el("strong", { textContent: l.type })),
+          el("td", { textContent: l.ref }),
+          el("td", { textContent: l.party }),
+          el("td", { textContent: l.details }),
+          el("td", { textContent: Number(l.debit).toFixed(2) + " TK" }),
+          el("td", { textContent: Number(l.credit).toFixed(2) + " TK" }),
+          el("td", null, el("span", { className: "badge " + pCls, textContent: pSign + Number(l.profitImpact).toFixed(2) + " TK" }))
+        ]));
+      });
+    }
+    renderPaginationBar("ledgerPagination", ledgerPage, res.totalPages, res.total, function(p) { ledgerPage = p; renderLedgerTable(); });
+  }
+
+  function exportLedgerCSV() {
+    const rows = getFilteredLedger();
+    if (rows.length === 0) return showToast("No entries to export.");
+
+    const header = ["Date", "Type", "Reference", "Party", "Details", "Debit (Cash In)", "Credit (Cash Out)", "IAS Profit Impact"];
+    const csvLines = [header.join(",")];
+    rows.forEach(function(r) {
+      const line = [
+        r.date,
+        '"' + String(r.type).replace(/"/g, '""') + '"',
+        '"' + String(r.ref).replace(/"/g, '""') + '"',
+        '"' + String(r.party).replace(/"/g, '""') + '"',
+        '"' + String(r.details).replace(/"/g, '""') + '"',
+        Number(r.debit).toFixed(2),
+        Number(r.credit).toFixed(2),
+        Number(r.profitImpact).toFixed(2)
+      ];
+      csvLines.push(line.join(","));
+    });
+
+    const blob = new Blob([csvLines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "MediCare_IAS_Ledger_" + getTodayStr() + ".csv";
+    link.click();
+  }
+
+  function loadSettingsForm() {
+    const s = appState.settings || {};
+    document.getElementById("setShopName").value = s.shopName || "";
+    document.getElementById("setShopPhone").value = s.shopPhone || "";
+    document.getElementById("setShopAddress").value = s.shopAddress || "";
+    document.getElementById("setAlertEmail").value = s.alertEmail || "";
+    document.getElementById("setShopFooter").value = s.shopFooter || "";
+  }
+
+  function submitSettings() {
+    setSyncIndicator(true, "Saving shop settings...");
+    const payload = {
+      shopName: document.getElementById("setShopName").value.trim(),
+      shopPhone: document.getElementById("setShopPhone").value.trim(),
+      shopAddress: document.getElementById("setShopAddress").value.trim(),
+      alertEmail: document.getElementById("setAlertEmail").value.trim(),
+      shopFooter: document.getElementById("setShopFooter").value.trim()
+    };
+
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(fresh) { applyServerResponse(fresh, "Shop settings saved"); })
+        .withFailureHandler(function(err) { showToast("Error: " + err.message); })
+        .saveShopSettings(payload);
+    }
+  }
+
+  function paginate(arr, page) {
+    const total = arr.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    const start = (safePage - 1) * PAGE_SIZE;
+    return { slice: arr.slice(start, start + PAGE_SIZE), total: total, totalPages: totalPages };
+  }
+
+  function renderPaginationBar(elId, currentPage, totalPages, totalItems, onPageChange) {
+    const bar = document.getElementById(elId);
+    clearNode(bar);
+    if (totalItems <= PAGE_SIZE) {
+      bar.appendChild(el("span", { textContent: "Showing " + totalItems + " of " + totalItems + " entries" }));
+      return;
+    }
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end = Math.min(totalItems, currentPage * PAGE_SIZE);
+
+    bar.appendChild(el("span", { textContent: "Showing " + start + "-" + end + " of " + totalItems + " entries" }));
+    const btnWrap = el("div", { className: "page-btns" });
+
+    const prevBtn = el("button", { type: "button", className: "page-btn", textContent: "Prev" });
+    prevBtn.disabled = currentPage <= 1;
+    prevBtn.addEventListener("click", function() { onPageChange(currentPage - 1); });
+    btnWrap.appendChild(prevBtn);
+
+    for (let p = 1; p <= totalPages; p++) {
+      (function(pageNum) {
+        const pBtn = el("button", {
+          type: "button",
+          className: "page-btn" + (pageNum === currentPage ? " active" : ""),
+          textContent: String(pageNum)
+        });
+        pBtn.addEventListener("click", function() { onPageChange(pageNum); });
+        btnWrap.appendChild(pBtn);
+      })(p);
+    }
+
+    const nextBtn = el("button", { type: "button", className: "page-btn", textContent: "Next" });
+    nextBtn.disabled = currentPage >= totalPages;
+    nextBtn.addEventListener("click", function() { onPageChange(currentPage + 1); });
+    btnWrap.appendChild(nextBtn);
+
+    bar.appendChild(btnWrap);
+  }
+
+  function positionFloatingMenu(menu, triggerBtn) {
+    menu.style.display = "block";
+    const rect = triggerBtn.getBoundingClientRect();
+    const menuW = menu.offsetWidth || 170;
+    const menuH = menu.offsetHeight || 110;
+    let left = rect.right - menuW;
+    let top = rect.bottom + 4;
+
+    if (left < 10) left = 10;
+    if (top + menuH > window.innerHeight - 10) top = rect.top - menuH - 4;
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove("open");
+  }
+})();
+</script>
+</body>
+</html>
